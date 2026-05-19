@@ -238,6 +238,25 @@ off to Team Lead (Phase 3).
 
 Report progress function-by-function; never summarize across functions.
 
+**Pre-implementation invariants** — apply these while writing every
+function, not after. Phase 4 reviewers will fail the run on any of them,
+and re-writing 10+ entry points to add them retroactively is the
+single biggest cause of context churn:
+
+- Every SQL entry point (type-system ops AND VDFs) is wrapped in
+  `try/catch (...)`. Use function-try-block syntax. No exceptions.
+- No file-scope `using namespace`. Use per-symbol `using` declarations
+  (e.g. `using vsql::CustomArg;`) or fully-qualified names.
+- Null check is the first thing inside the function body, before any
+  other field access.
+- Bounds check before every `memcpy`/`memset` against the destination
+  buffer size.
+- No `std::string` allocation in parse hot paths — use `std::string_view`
+  and `.reserve()` when a `std::string` is genuinely needed.
+
+These rules are stable C++ idiom — they don't depend on VEF API names
+and won't drift. `references/patterns.md` has the longer explanations.
+
 1. Implement using only names extracted during Phase 2 bootstrap — never
    names from `references/patterns.md`.
 2. Write a `.test` file (see `references/environment.md` for
@@ -309,36 +328,37 @@ off to CTO (Phase 4).
 
 ### Phase 4: Quality Review *(CTO)*
 
-The CTO persona does not self-attest. Instead, spawn two independent
-reviews **in parallel** — send both tool calls in a **single assistant
-message** — and wait for both to return before reading either:
+The CTO persona does not self-attest. Phase 3 already ran the
+reuse/quality/efficiency review via three parallel agents — Phase 4
+does **not** repeat that work. Phase 4 is a checklist gate: independent
+verification that the invariants and standards in
+`references/cto-checklist.md` hold in the final code.
 
-**Agent A — Critic (Explore subagent):** Pass it the contents of
+Spawn one critic review:
+
+**Critic (Explore subagent):** Pass it the contents of
 `references/cto-checklist.md` plus the full `src/` and `mysql-test/`
-content. Task: "Read this code independently against the checklist. For
-each item, cite file:line evidence of pass or fail. Do not trust prior
-summaries — read the code yourself. Return a verdict per item plus an
-overall PASS/FAIL."
+content. Task: "Verify each checklist item against the code. Cite
+file:line evidence of pass or fail for every item. Do not propose
+reuse/quality/efficiency improvements — Phase 3 already covered that.
+Your job is the checklist only. Return a verdict per item plus overall
+PASS/FAIL." If the critic strays into reuse/quality/efficiency
+suggestions, ignore those — they are out of scope for this gate.
 
-**Agent B — `/simplify`:** Invoke the `/simplify` skill against the
-changed code. It reviews for reuse, quality, and efficiency, then
-proposes fixes.
+Write `.claude/tracking/cto_review.md` capturing the critic's verbatim
+findings plus your disposition for each item (applied / rejected with
+reason).
 
-When both return, write `.claude/tracking/cto_review.md` capturing the
-critic's verbatim findings and `/simplify`'s output, plus your
-disposition for each item (applied / rejected with reason).
-
-If the critic returns any FAIL or `/simplify` returns any valid fix,
-return to Team Lead with the specific deficiency list. Team Lead
-addresses only those items; on resubmission, re-run both agents against
-the changed code. If deficiencies require more than 3 fix cycles,
-escalate to the user.
+If the critic returns any FAIL, return to Team Lead with the specific
+deficiency list. Team Lead addresses only those items; on resubmission,
+re-run the critic against the changed code. If deficiencies require
+more than 3 fix cycles, escalate to the user.
 
 `.claude/tracking/cto_review.md` is a session scratchpad and must not be
 committed (covered by the `.claude/` gitignore from Phase 2).
 
-**Gate:** Critic agent returns PASS and `/simplify` returns no remaining
-valid fixes. Hand off to End-User (Phase 5).
+**Gate:** Critic agent returns overall PASS. Hand off to End-User
+(Phase 5).
 
 ### Phase 5: User Acceptance Testing *(End-User)*
 

@@ -11,8 +11,8 @@ the workflow that contradicts them.
 - **Incremental Verification.** Test every function immediately after
   implementation. NEVER proceed with failing tests.
 
-- **No Gate Skipping.** The phase gates (especially the Phase 3 three-agent
-  simplification review and the Phase 4 critic + `/simplify` review) are
+- **No Gate Skipping.** The phase gates (the Phase 3 three-agent
+  simplification review and the Phase 4 critic checklist review) are
   mandatory. Run them as written even if the user is being terse, even if
   the work feels small, even if it slows iteration. Never offer to skip a
   gate; never call a gate optional. The only escape is the user explicitly
