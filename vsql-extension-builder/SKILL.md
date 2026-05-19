@@ -224,8 +224,11 @@ binary layout. Proceed to Phase 2.
    - Confirm `LICENSE` is present and unchanged (GPL-2.0 from template)
    - Clear the hello-world implementation in `src/`, keeping the entry
      point structure
-   - Verify `build.sh` matches the scaffold template in
-     `references/environment.md`
+   - Verify `build.sh` from the cloned directory: read it and confirm it
+     has `set -euo pipefail`, reads `VillageSQL_BUILD_DIR`, and runs
+     `cmake` followed by `cmake --build`. The cloned template is the
+     source of truth — if `build.sh` is missing or differs, restore it
+     from the template repo rather than writing a new one from scratch.
 
 **Gate:** State the result type constants extracted from the input/output
 struct header — evidence the bootstrap ran against live headers. Hand
@@ -271,17 +274,30 @@ Report progress function-by-function; never summarize across functions.
    full `src/` content as context. Do not continue until all three
    results have returned.
 
-   **Agent 1 — Reuse & AI-Slop:** Flag internal duplication, hand-rolled
-   reimplementations of SDK/stdlib utilities, and AI-slop patterns
-   (unnecessary defensiveness, over-abstraction, redundant comments,
-   empty catch blocks).
+   **Scope for all three agents:** Review only the new extension's source
+   files (`src/`). Do not search or reference other extensions. For each
+   finding, cite file:line and state the specific fix to apply — vague
+   findings ("this could be cleaner") are not actionable and must be
+   rejected.
 
-   **Agent 2 — Quality:** Flag redundant state, parameter sprawl,
-   copy-paste variation, leaky abstractions, stringly-typed code.
+   **Agent 1 — Reuse & AI-Slop:** Flag (1) internal duplication — near-
+   identical functions, repeated logic blocks, or copy-paste with slight
+   variation that should be unified; (2) hand-rolled reimplementations of
+   things the VEF SDK or C++ stdlib already provides — manual string
+   manipulation, bespoke parsing where standard utilities exist; (3) AI-
+   slop patterns — unnecessary defensiveness for conditions the VEF
+   contract makes impossible, over-abstraction for a single caller,
+   redundant comments that restate the code, empty catch blocks,
+   indirection layers that serve no purpose.
 
-   **Agent 3 — Efficiency:** Flag unnecessary work, missed concurrency,
-   hot-path bloat, TOCTOU anti-patterns, memory issues, overly broad
-   reads.
+   **Agent 2 — Quality:** Flag redundant state, parameter sprawl, copy-
+   paste variation across functions, leaky abstractions, stringly-typed
+   code, and any interface that requires callers to know internals.
+
+   **Agent 3 — Efficiency:** Flag unnecessary work on every call, hot-
+   path allocations that could be avoided, TOCTOU anti-patterns, memory
+   issues (bounds, leaks, use-after-free), and overly broad reads where
+   a narrower access pattern exists.
 
    Wait for all three. Record each agent's verbatim findings and your
    disposition (applied / rejected, with reason) in

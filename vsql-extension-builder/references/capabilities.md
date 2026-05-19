@@ -11,9 +11,22 @@ Assess all capabilities from the typed API headers (`vsql.h` and the
 - **Storage model.** Does the type builder expose only fixed-length
   storage, or also variable-length? For fixed-length, the persisted length
   sets the storage size and encode must write exactly that many bytes;
-  returning 0 via the length output parameter signals an error. If only
-  fixed-length is available, size to your practical maximum, write data +
-  zero-padding, embed an in-band length header, and document in README.
+  returning 0 via the length output parameter signals an error.
+
+  **If only fixed-length storage is available** and the type is
+  inherently variable in size (e.g., hstore, JSON-like, packed lists),
+  apply this workaround — only if the probe above confirms no
+  variable-length API exists:
+  1. Size `persisted_length` to your practical maximum (e.g., the largest
+     valid value the type accepts).
+  2. In encode: write the real data, then zero-pad to fill exactly
+     `persisted_length` bytes. Encode must write exactly that count.
+  3. Embed an in-band header at a fixed offset (e.g., a 2- or 4-byte
+     byte count at the start) so decode knows where real data ends.
+  4. In decode: read the in-band length, then process only that many
+     bytes — ignore the zero padding.
+  5. Document this constraint in README under Known Limitations, naming
+     the VEF capability that would remove the need for it.
 
 - **Parameterized types.** Does the SDK expose registration functions for
   types that accept `TYPE(N)` or `TYPE('key=value')` arguments? Look for

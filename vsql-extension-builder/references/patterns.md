@@ -94,12 +94,21 @@ Applies to key-value and JSON-like extension types.
   search.
 - **Deduplication (last-key-wins).** When the same key appears multiple
   times, the last occurrence wins (PostgreSQL semantics). `std::sort` +
-  `std::unique` is incorrect — iterate backwards, track seen keys with an
-  `unordered_set`, then sort the deduplicated result.
+  `std::unique` is incorrect for this — it removes the first duplicate
+  encountered, keeping the *first* occurrence, not the last. Correct
+  algorithm: iterate backwards through the parsed pairs, use an
+  `std::unordered_set` to track keys already seen, and keep only the
+  first time you encounter each key in this reverse pass (which is the
+  last occurrence in the original string). Then sort the deduplicated
+  result by key.
 - **MySQL backslash escaping.** MySQL processes backslash escapes in
-  single-quoted literals before the string reaches your extension. Write
-  test inputs as MySQL sees them, not as the original literal. This is a
-  silent failure mode.
+  single-quoted literals before the string reaches your extension. A
+  test input like `'"key\"quoted\""=>"val"'` arrives at your extension
+  as `"key"quoted""=>"val"` — the backslashes are consumed by MySQL,
+  not passed through. Write test inputs as MySQL sees them (after escape
+  processing), not as the raw literal. This is a silent failure mode:
+  the extension receives a different string than intended and may return
+  NULL with no error.
 
 ## Function Naming Conventions
 
