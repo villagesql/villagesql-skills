@@ -151,8 +151,14 @@ binary layout. Proceed to Phase 2.
 
    a. List all include roots present under `{sdk_dir}/` — typically
       `include/` and `include-dev/`. List all `.h` files under both
-      recursively. The typed API (`vsql.h` or `vsql/` subdirectory) may
-      appear in either root depending on the SDK version; check both.
+      recursively, **skipping any directory named `abi/`**. The typed
+      API (`vsql.h` or `vsql/` subdirectory) may appear in either root
+      depending on the SDK version; check both. **If you find yourself
+      reading a header whose path contains `/abi/`, stop immediately —
+      you are in the wrong layer. Close it and read only headers under
+      the typed API path (`vsql.h` or `vsql/` subdirectory). ABI
+      headers are not part of the VEF extension interface and must never
+      be used.**
       **When both roots exist, `include-dev/` must precede `include/` in
       the compiler include path —** `include/` ships older protocol
       headers that won't compile against the newer typed API. The cloned

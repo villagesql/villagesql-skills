@@ -34,7 +34,10 @@ the workflow that contradicts them.
 - **Typed C++ API Only.** Locate `vsql.h` and the `vsql/` subdirectory in
   the SDK during Phase 2 bootstrap. All implementation work goes through
   this typed API. If it is not present in the SDK, stop and flag this to
-  the user before writing any implementation code.
+  the user before writing any implementation code. **Never read headers
+  under any `abi/` directory** — those are internal server/protocol
+  headers, not the extension interface. If you find yourself reading one,
+  stop and return to the typed API headers.
 
 - **Preview vs. Stable.** Within the typed API, headers under a `preview/`
   subdirectory are preview capabilities — documented but unstable across
