@@ -97,16 +97,38 @@ and 2.
 
 1. **Research.** For standard types, research the PostgreSQL/Standard API
    for comprehensive coverage.
-2. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory and
-   answer the header-discoverable questions in
-   `references/capabilities.md`. Two of those probes (aggregate-function
+2. **Locate and verify the SDK.** Before reading any header, locate the
+   staged SDK and verify its version. This must run before the
+   feasibility check — Phase 1 reads against this SDK only, never the
+   source tree or a stale tarball.
+
+   - Glob `{build_dir}/villagesql-extension-sdk-*/`. Filter to
+     directories only (the build dir often also contains
+     `villagesql-extension-sdk-*.tar.gz` whose mtime can win the
+     newest-by-mtime check). Take the directory with the most recent
+     modification time — alphabetic order picks the wrong version.
+   - Run `{sdk_dir}/bin/villagesql_config --version` and compare to the
+     Phase 0 session version. If they differ, pause and ask the user to
+     fix `build_dir` or rebuild the server.
+   - For `-dev` builds, also compare any header mtime under
+     `{sdk_dir}/include/` or `{sdk_dir}/include-dev/` against `mysqld`.
+     If `mysqld` is newer, the SDK is stale.
+   - Skip any directory named `abi/` when listing or reading headers.
+     If you find yourself reading a path containing `/abi/`, stop — you
+     are in the wrong layer. Use only `vsql.h` and the `vsql/` subdir.
+
+   Record the verified `sdk_dir` in
+   `.claude/tracking/architecture.md`.
+3. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory
+   *from the verified SDK* and answer the header-discoverable questions
+   in `references/capabilities.md`. Two probes (aggregate-function
    support, extension upgrade path) need a live install and run in
-   Phase 3. Write confirmed constraints to `.claude/tracking/limitations.md`
-   immediately.
-3. **Function names.** Pick the SQL function names. Apply the conventions
+   Phase 3. Write confirmed constraints to
+   `.claude/tracking/limitations.md` immediately.
+4. **Function names.** Pick the SQL function names. Apply the conventions
    in `references/patterns.md` → Function Naming Conventions. Record in
    `.claude/tracking/architecture.md`.
-4. **Design.** Record the design in `.claude/tracking/architecture.md`.
+5. **Design.** Record the design in `.claude/tracking/architecture.md`.
    If the extension introduces a custom type, include the binary layout
    (with sorted storage for key-value types). Pure-VDF extensions can
    skip the binary layout.
@@ -129,68 +151,34 @@ binary layout. Proceed to Phase 2.
    `gh repo create` fails, stop and report — do not scaffold manually.
    Do not use other published extensions as implementation references.
 
-2. **API Bootstrap.**
+2. **API Bootstrap.** The SDK was located and verified in Phase 1 step 2.
+   Phase 2 now extracts the exact names needed for implementation by
+   reading the typed API headers — the same SDK, deeper read.
 
-   **Step 1 — Locate staged SDK.** Glob
-   `{build_dir}/villagesql-extension-sdk-*/`. Filter to directories
-   only — the build directory typically also contains a
-   `villagesql-extension-sdk-*.tar.gz` tarball whose mtime can win the
-   newest-by-mtime check. Take the directory with the most recent
-   modification time (not alphabetically first — an older version sorts
-   first and causes a version mismatch). Never use source tree headers.
-
-   **Step 2 — Verify version alignment.** Run
-   `{sdk_dir}/bin/villagesql_config --version` and compare to the session
-   version from Phase 0. If they differ, pause and ask the user to
-   provide the correct `build_dir` or rebuild the server. For `-dev`
-   builds, also compare the mtime of any SDK header under
-   `{sdk_dir}/include/` or `{sdk_dir}/include-dev/` against `mysqld` —
-   if the binary is newer, the SDK is stale.
-
-   **Step 3 — Discover and read the SDK headers:**
-
-   a. List all include roots present under `{sdk_dir}/` — typically
-      `include/` and `include-dev/`. List all `.h` files under both
-      recursively, **skipping any directory named `abi/`**. The typed
-      API (`vsql.h` or `vsql/` subdirectory) may appear in either root
-      depending on the SDK version; check both. **If you find yourself
-      reading a header whose path contains `/abi/`, stop immediately —
-      you are in the wrong layer. Close it and read only headers under
-      the typed API path (`vsql.h` or `vsql/` subdirectory). ABI
-      headers are not part of the VEF extension interface and must never
-      be used.**
-      **When both roots exist, `include-dev/` must precede `include/` in
-      the compiler include path —** `include/` ships older protocol
-      headers that won't compile against the newer typed API. The cloned
-      template's `CMakeLists.txt` and `FindVillageSQL.cmake` normally
-      handle this. If you hit a build error referencing protocol/ABI
-      version mismatch, verify the include order in the CMake config and
-      fix it there.
-   b. Locate the typed C++ API — look for `vsql.h` or a `vsql/`
-      subdirectory in either include root. This is the required API. If
-      no typed API is present, stop and flag this to the user before
-      proceeding.
+   a. List include roots under `{sdk_dir}/` (typically `include/` and
+      `include-dev/`), skipping any `abi/` directory. **When both roots
+      exist, `include-dev/` must precede `include/` in the compiler
+      include path —** `include/` ships older protocol headers that
+      won't compile against the newer typed API. The cloned template's
+      `CMakeLists.txt` and `FindVillageSQL.cmake` normally handle this.
+      If you hit a protocol/ABI version mismatch at build time, verify
+      include order in the CMake config and fix it there.
+   b. Confirm the typed C++ API is present (`vsql.h` or `vsql/`
+      subdirectory). If absent, stop and flag to the user.
    c. Identify which typed API file(s) expose VDF builder functions.
       Confirm by reading, not by filename.
    d. Identify which typed API file(s) expose custom type builder
       functions. Confirm by reading.
    e. Identify the file defining the input value struct and result
       struct. Confirm by reading — do not assume the filename.
-   f. Note any headers under a `preview/` subdirectory — preview
-      capabilities that are documented but unstable across server
-      builds. Any preview API use must be noted in
-      `.claude/tracking/limitations.md`.
+   f. Note headers under any `preview/` subdirectory. Preview API use
+      must be recorded in `.claude/tracking/limitations.md`.
 
    **Extract and record** in `.claude/tracking/architecture.md`: result
    type constants, input/output struct names and field names, builder
-   function and method names, parameter limits, whether a typed API is
-   available. These names govern all code in this session — any name in
-   `references/patterns.md` is illustrative only.
-
-   **Step 4 — Record header-discoverable capabilities.** Answer the
-   questions in `references/capabilities.md`. Record in
-   `.claude/tracking/architecture.md` and write constraints to
-   `.claude/tracking/limitations.md`.
+   function and method names, parameter limits. These names govern all
+   code in this session — any name in `references/patterns.md` is
+   illustrative only.
 
 3. **Customize Scaffold.** Walk every file in the cloned template and
    decide keep / rename / edit / delete. Do not hand-pick a subset — the
@@ -424,15 +412,15 @@ to the user.
    to 👍 it. If not, ask the user to open a new issue or post to
    [Discord](https://discord.gg/KSr6whd3Fr).
 
-4. **Scrub skill vocabulary from shipped files.** Grep every committed
-   file (everything not in `.claude/`) for: `Criterion N` (any number),
-   `Phase N`, `Behavior probe`, `UAT`, `acceptance_criteria`, `Persona`,
-   `Product Strategist`, `Architect`, `Team Lead`, `CTO`, `End-User`.
-   Any hit outside a quoted user-facing string is skill-internal
-   narration that leaked — rewrite as a behavior description and re-run
-   the grep until clean. This applies to `.test`, `.result`,
-   `README.md`, `TESTING.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-   source comments, and commit messages.
+4. **Verify skill vocabulary is absent.** The Phase 4 critic already
+   checked for this across all shipped files. Re-run a final grep over
+   every committed file (everything not in `.claude/`) for the forbidden
+   terms in `references/cto-checklist.md` → Testing Integrity. Expected
+   result: zero hits. If there are any, the CTO missed something —
+   rewrite the offending content as a behavior description and re-run
+   Phase 4 against the changed file (a content change after CTO sign-off
+   re-opens the gate). Do not ship until the grep is clean and Phase 4
+   has approved the changed text.
 
 5. **Verify `.claude/` is ignored, not staged.** Run
    `git check-ignore .claude/tracking/architecture.md` — it should
