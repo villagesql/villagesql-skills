@@ -4,7 +4,7 @@ Agent skills for VillageSQL.
 
 ## Skills
 
-- [`vsql-extension-builder/`](vsql-extension-builder/SKILL.md) — End-to-end
+- [`vsql-extension-builder/`](skills/vsql-extension-builder/SKILL.md) — End-to-end
   builder for VillageSQL extensions. Seven-phase persona-driven workflow:
   requirements, feasibility, scaffold, implementation, CTO review, UAT, and
   documentation. Discovers the current VEF API from live SDK headers — no
