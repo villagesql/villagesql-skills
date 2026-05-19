@@ -27,7 +27,7 @@ Detail loaded on demand by `SKILL.md`:
 
 ## Invoking
 
-After install (see the [top-level README](../README.md)), invoke from any
+After install (see the [top-level README](../../README.md)), invoke from any
 directory:
 
 ```

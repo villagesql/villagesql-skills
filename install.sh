@@ -34,7 +34,7 @@ mkdir -p "$SKILLS_DIR"
 
 installed=0
 skipped=0
-for skill_dir in "$SRC_DIR"/*/; do
+for skill_dir in "$SRC_DIR"/skills/*/; do
   skill_name=$(basename "${skill_dir%/}")
   if [ ! -f "$skill_dir/SKILL.md" ]; then
     continue

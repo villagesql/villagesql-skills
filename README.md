@@ -9,7 +9,7 @@ agent runtimes that support the
 
 | Skill | What it does |
 |---|---|
-| [`vsql-extension-builder`](vsql-extension-builder/) | Builds a VillageSQL extension end-to-end through a 7-phase persona-driven workflow. Discovers the current VEF API from live SDK headers — no hardcoded API names. |
+| [`vsql-extension-builder`](skills/vsql-extension-builder/) | Builds a VillageSQL extension end-to-end through a 7-phase persona-driven workflow. Discovers the current VEF API from live SDK headers — no hardcoded API names. |
 
 More skills will be added here over time.
 
@@ -37,7 +37,7 @@ CLAUDE_SKILLS_DIR=~/.claude/skills \
 ```bash
 git clone https://github.com/villagesql/villagesql-skills.git ~/code/villagesql-skills
 mkdir -p ~/.claude/skills
-ln -s ~/code/villagesql-skills/vsql-extension-builder ~/.claude/skills/vsql-extension-builder
+ln -s ~/code/villagesql-skills/skills/vsql-extension-builder ~/.claude/skills/vsql-extension-builder
 ```
 
 Verify the skill is loaded by typing `/` in Claude Code — the skill name
@@ -54,10 +54,11 @@ git -C ~/code/villagesql-skills pull
 Each skill follows the standard Agent Skills directory layout:
 
 ```
-<skill-name>/
-├── SKILL.md           # entry point — frontmatter, workflow, gates
-└── references/        # detailed material loaded on demand
-    └── *.md
+skills/
+└── <skill-name>/
+    ├── SKILL.md           # entry point — frontmatter, workflow, gates
+    └── references/        # detailed material loaded on demand
+        └── *.md
 ```
 
 `SKILL.md` is loaded eagerly when the skill triggers and stays thin and
