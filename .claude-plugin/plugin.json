@@ -1,0 +1,7 @@
+{
+  "name": "vsql-extension-builder",
+  "description": "Builds a VillageSQL extension for MySQL end-to-end through a 7-phase persona-driven workflow. Commonly used to port PostgreSQL extensions to MySQL.",
+  "author": {
+    "name": "VillageSQL"
+  }
+}
