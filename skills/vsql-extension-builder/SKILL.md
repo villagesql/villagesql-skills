@@ -48,16 +48,6 @@ scope) that override anything in the workflow that contradicts them.
 
 Gather through plain-text conversational questions (no UI selectors):
 
-0. **Resume vs. fresh start.** Before asking anything, check the current
-   directory for `.claude/tracking/` and `manifest.json`. If both exist,
-   this is a resume — read every file in `.claude/tracking/` and the
-   Resume Protocol section to determine the last completed gate, then
-   jump to the next phase. If only one or neither exists but the
-   directory is non-empty (existing `src/`, `mysql-test/`, or branch with
-   prior commits), stop and ask whether to resume in-place, start a new
-   extension in a subdirectory, or abort. Never overwrite existing
-   scaffold files without explicit confirmation.
-
 1. **Extension description.** If `$ARGUMENTS` was provided, skip this.
    Otherwise ask — if vague, clarify before proceeding. Before recording
    the description, evaluate whether the request is achievable as a VEF
