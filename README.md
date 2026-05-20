@@ -84,8 +84,7 @@ A few conventions:
 
 ## License
 
-GPL-2.0 — see [`LICENSE`](LICENSE). Matches the rest of the VillageSQL
-ecosystem.
+Apache-2.0 — see [`LICENSE`](LICENSE).
 
 ## Links
 
