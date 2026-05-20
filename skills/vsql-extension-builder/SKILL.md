@@ -55,14 +55,35 @@ Gather through plain-text conversational questions (no UI selectors):
    here and explain the distinction to the user — do not proceed to
    Phase 1.
 
-2. **Paths:**
+2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
+   (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
+   - `~/.villagesql/credentials.txt` — created by the installer; most
+     authoritative source of paths and connection details
+   - `~/AGENTS.local.md` and `./AGENTS.local.md` — machine-specific
+     overrides used across VillageSQL repos
+
+   If both values are found, record them and skip the question. Ask only
+   for what is still missing after checking all three files.
+
    - `build_dir` — VillageSQL build directory (used for the staged SDK
      and `mysqld`/`mysql` binaries; most paths in this skill resolve from
      here).
    - `source_dir` — VillageSQL source repository (only needed to read
      example extensions like `villagesql/examples/vsql-tvector/`).
 
-3. **Server connectivity:**
+3. **Server connectivity:** Before asking, attempt to derive connection
+   details from the files checked in step 2, in the same order:
+   - `~/.villagesql/credentials.txt` — contains socket path, port, root
+     password, and a ready-to-use connection command
+   - `~/AGENTS.local.md` / `./AGENTS.local.md` — may contain socket or
+     port overrides
+   - `~/.my.cnf` — standard MySQL client credentials fallback
+
+   If a socket path and credentials are available, attempt connection
+   immediately. Only ask the user if the connection attempt fails or no
+   credentials can be found in any of the above files.
+
+   Once connected, run:
    ```sql
    SELECT 'connected';
    SHOW VARIABLES LIKE 'villagesql_server_version';
@@ -94,9 +115,10 @@ and 2.
 
    - Glob `{build_dir}/villagesql-extension-sdk-*/`. Filter to
      directories only (the build dir often also contains
-     `villagesql-extension-sdk-*.tar.gz` whose mtime can win the
-     newest-by-mtime check). Take the directory with the most recent
-     modification time — alphabetic order picks the wrong version.
+     `villagesql-extension-sdk-*.tar.gz`). Extract the version component
+     from each directory name and select the one with the highest semver
+     (MAJOR.MINOR.PATCH). Do not use mtime or alphabetic order — both
+     can pick the wrong directory when multiple SDK versions are present.
    - Run `{sdk_dir}/bin/villagesql_config --version` and compare to the
      Phase 0 session version. If they differ, pause and ask the user to
      fix `build_dir` or rebuild the server.
@@ -128,17 +150,32 @@ binary layout. Proceed to Phase 2.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
-1. **Create from Template.** Ask the user for the GitHub owner (user or
-   org) and confirm the repo name, then create the repo from the
-   official template:
+1. **Create from Template.** Ask the user whether they want a GitHub repo
+   or a local-only scaffold. Three options:
+   - **GitHub user** — create under the user's own account
+   - **GitHub org** — create under an organization
+   - **Local only** — clone the template without creating a GitHub repo
+
+   For GitHub options, confirm the owner and repo name, then:
    ```bash
    gh repo create <owner>/<extension_name> --template villagesql/vsql-extension-template --clone
    ```
    This creates the GitHub repo with a "Generated from" link to the
-   template and clones it locally in one step. Use the hyphen form for
-   the repo name (e.g., `vsql-name`); use the underscore form for the
-   local directory and all internal references (e.g., `vsql_name`). If
-   `gh repo create` fails, stop and report — do not scaffold manually.
+   template and clones it locally in one step. If `gh repo create` fails,
+   stop and report — do not scaffold manually.
+
+   For **local only**, clone the template directly:
+   ```bash
+   git clone https://github.com/villagesql/vsql-extension-template <extension_name>
+   ```
+   Then remove the `.git` directory and run `git init` so the user starts
+   with a clean local repo unattached to the template remote. Record
+   `local_only: true` in `.claude/tracking/architecture.md` — Phase 6
+   documentation steps that reference a GitHub repo URL should be skipped
+   or noted as TODO when this flag is set.
+
+   Use the hyphen form for the repo/directory name (e.g., `vsql-name`);
+   use the underscore form for all internal references (e.g., `vsql_name`).
    Do not use other published extensions as implementation references.
 
 2. **API Bootstrap.** The SDK was located and verified in Phase 1 step 2.
@@ -223,8 +260,11 @@ single biggest cause of context churn:
 
 - Every SQL entry point (type-system ops AND VDFs) is wrapped in
   `try/catch (...)`. Use function-try-block syntax. No exceptions.
-- No file-scope `using namespace`. Use per-symbol `using` declarations
-  (e.g. `using vsql::CustomArg;`) or fully-qualified names.
+- No file-scope `using namespace`. Prefer per-symbol `using` declarations
+  (e.g. `using vsql::CustomArg;`) at the top of each translation unit;
+  fall back to fully-qualified names only when two namespaces would
+  otherwise collide or in template contexts where the declaration site
+  is ambiguous.
 - Null check is the first thing inside the function body, before any
   other field access.
 - Bounds check before every `memcpy`/`memset` against the destination
