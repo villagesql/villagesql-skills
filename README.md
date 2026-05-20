@@ -18,7 +18,7 @@ More skills will be added here over time.
 ### Quick install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/villagesql/villagesql-skills/main/install.sh | sh
+curl -sSL https://villagesql.com/skills | bash
 ```
 
 Clones the repo to `~/.local/share/villagesql-skills` and symlinks every
@@ -29,7 +29,7 @@ Override locations with env vars:
 ```bash
 VILLAGESQL_SKILLS_SRC=~/code/villagesql-skills \
 CLAUDE_SKILLS_DIR=~/.claude/skills \
-  curl -sSL https://raw.githubusercontent.com/villagesql/villagesql-skills/main/install.sh | sh
+  curl -sSL https://villagesql.com/skills | bash
 ```
 
 ### Manual install (recommended for contributors)
