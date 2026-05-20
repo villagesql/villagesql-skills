@@ -1,0 +1,7 @@
+{
+  "name": "vsql-extension-builder",
+  "description": "Builds a VillageSQL extension end-to-end through a 7-phase persona-driven workflow.",
+  "author": {
+    "name": "VillageSQL"
+  }
+}
