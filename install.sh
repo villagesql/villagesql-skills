@@ -3,7 +3,7 @@
 # Supports: Claude Code, OpenAI Codex, Cursor, Amp, Gemini CLI, Antigravity, Kiro
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/villagesql/villagesql-skills/main/install.sh | sh
+#   curl -sSL https://raw.githubusercontent.com/villagesql/villagesql-skills/main/install.sh | bash
 #
 # Env vars (optional):
 #   VILLAGESQL_SKILLS_SRC  Local clone of villagesql-skills repo
