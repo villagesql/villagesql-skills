@@ -438,11 +438,29 @@ to the user.
 3. **Call to Action.** For each limitation, search
    [villagesql-server issues](https://github.com/villagesql/villagesql-server/issues)
    using `mcp__github__search_issues` (or construct a search URL if
-   unavailable). If a matching issue exists, link it and ask the user
-   to 👍 it. If not, ask the user to open a new issue or post to
-   [Discord](https://discord.gg/KSr6whd3Fr).
+   unavailable). If a matching issue exists, link it in the README and
+   ask the user to 👍 it. If no issue exists, ask the user whether to
+   open one now — offer to draft it. If the agent files the issue, the
+   title must include `[extension-builder]` and the body must open with:
+   > *Surfaced by the VillageSQL Extension Builder skill while building
+   > `<extension-name>`.*
 
-4. **Verify skill vocabulary is absent.** The Phase 4 critic already
+   **Gate:** Every limitation must have a search result recorded here —
+   either a linked server issue or a note that the user was prompted to
+   open one. Do not mark Phase 6 complete until this is done for every
+   entry in `limitations.md`.
+
+4. **Announce the extension.** Prompt the user to open a **Feature**
+   issue on
+   [villagesql-server](https://github.com/villagesql/villagesql-server/issues)
+   to let the VillageSQL team know the extension exists — VillageSQL uses
+   these to consider adding community extensions to the website. Suggested
+   title: `[Community Extension] <extension-name>`. Offer to draft the
+   issue. If the agent files it, the title must also include
+   `[extension-builder]` and the body must open with:
+   > *Filed by the VillageSQL Extension Builder skill.*
+
+5. **Verify skill vocabulary is absent.** The Phase 4 critic already
    checked for this across all shipped files. Re-run a final grep over
    every committed file (everything not in `.claude/`) for the forbidden
    terms in `references/cto-checklist.md` → Testing Integrity. Expected
@@ -452,12 +470,12 @@ to the user.
    re-opens the gate). Do not ship until the grep is clean and Phase 4
    has approved the changed text.
 
-5. **Verify `.claude/` is ignored, not staged.** Run
+6. **Verify `.claude/` is ignored, not staged.** Run
    `git check-ignore .claude/tracking/architecture.md` — it should
    print the path (meaning ignored). If not, fix `.gitignore` before
    any commit.
 
-6. **Offer cleanup.** Ask the user whether to uninstall and remove the
+7. **Offer cleanup.** Ask the user whether to uninstall and remove the
    extension. If yes:
    1. Check for dependent columns:
       ```sql
