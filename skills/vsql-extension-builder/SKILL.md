@@ -444,10 +444,11 @@ to the user.
    - Function Reference (full signatures + NULL-handling semantics)
    - Working with custom types (only if the extension defines one —
      cover CAST limitations and how to read values back)
-   - Migrating from PostgreSQL (only if `pg_port: true` — see
-     `references/pg-port-guide.md` → "What to Put in the README";
-     must include name-mapping table, operator equivalents, behavioral
-     differences, and missing functions)
+   - Migrating from PostgreSQL (only if `pg_port: true` — write after
+     Phase 5 UAT so examples are live-verified; must include: function
+     name mapping table, operator equivalents table with SQL examples,
+     before/after SQL for common use cases, behavioral differences, and
+     every Blocked function with its workaround)
    - Known Limitations (assembled in step 2 below)
    - Testing (point to `TESTING.md`)
    - Reporting Bugs and Requesting Features (GitHub Issues link)
