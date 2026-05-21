@@ -30,6 +30,31 @@ template's existing `.claude/` gitignore — scratchpads never ship).
 the core principles (typed API only, no gate skipping, fail loud, VEF
 scope) that override anything in the workflow that contradicts them.
 
+## Context Management
+
+This skill runs across many phases and fix cycles. Context is finite —
+treat the conversation thread as a signal channel, not a log.
+
+**Rules that apply throughout every phase:**
+- **Tracking files are the record; the conversation is the signal.**
+  Verbose state (file contents read, agent findings, build output, test
+  output, search results) goes to `.claude/tracking/`. The conversation
+  gets a summary line.
+- **Do not echo file contents into the conversation when reading them.**
+  Read headers, source files, and references silently. State what you
+  found; do not paste what you read (except where a gate explicitly
+  requires an excerpt).
+- **Phase transitions are two lines maximum:** what gate evidence was
+  met, and which phase is next. Not a recap of all work done.
+- **Build failure output:** if cmake or make output exceeds 50 lines,
+  save the full output to `.claude/tracking/build_output_<n>.txt` and
+  paste only the error lines. Never paste a full cmake configuration
+  trace into the conversation.
+- **Proactive save:** if many phases have completed or many fix cycles
+  have run, save current state to tracking files before continuing. The
+  resume protocol reconstructs from tracking files — keeping them
+  current reduces the cost of any compaction.
+
 ## Persona Overview
 
 | Persona | Phase(s) | Focus | Failure Mode |
@@ -394,7 +419,9 @@ critic's response before writing `cto_review.md`.
 
 Write `.claude/tracking/cto_review.md` capturing the critic's verbatim
 findings plus your disposition for each item (applied / rejected with
-reason).
+reason). In the conversation, report only: "PASS" or "FAIL — N items:
+[one-line list of failed items]." Do not paste the full critic output
+into the conversation.
 
 If the critic returns any FAIL, return to Team Lead with the specific
 deficiency list. Team Lead addresses only those items; on resubmission,
