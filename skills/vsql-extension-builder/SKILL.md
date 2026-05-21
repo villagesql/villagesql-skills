@@ -439,9 +439,11 @@ to the user.
    [villagesql-server issues](https://github.com/villagesql/villagesql-server/issues)
    using `mcp__github__search_issues` (or construct a search URL if
    unavailable). If a matching issue exists, link it in the README and
-   ask the user to 👍 it. If no issue exists, ask the user whether to
-   open one now — offer to draft it. If the agent files the issue, the
-   title must include `[extension-builder]` and the body must open with:
+   ask the user to 👍 it. If no matching issue exists, write a
+   complete, copy-paste-ready issue draft inline — title, description,
+   and any relevant context — then ask the user: "Want me to file this,
+   or will you copy it?" If the agent files the issue, the title must
+   include `[extension-builder]` and the body must open with:
    > *Surfaced by the VillageSQL Extension Builder skill while building
    > `<extension-name>`.*
 
@@ -450,14 +452,16 @@ to the user.
    open one. Do not mark Phase 6 complete until this is done for every
    entry in `limitations.md`.
 
-4. **Announce the extension.** Prompt the user to open a **Feature**
-   issue on
+4. **Announce the extension.** Write a complete, copy-paste-ready
+   **Feature** issue draft for
    [villagesql-server](https://github.com/villagesql/villagesql-server/issues)
-   to let the VillageSQL team know the extension exists — VillageSQL uses
-   these to consider adding community extensions to the website. Suggested
-   title: `[Community Extension] <extension-name>`. Offer to draft the
-   issue. If the agent files it, the title must also include
-   `[extension-builder]` and the body must open with:
+   announcing the extension — include title, description, what it does,
+   and a link to the repo. Then ask the user: "Want me to file this, or
+   will you copy it?" VillageSQL uses these to consider adding community
+   extensions to the website. Suggested title:
+   `[Community Extension] <extension-name>`. If the agent files it, the
+   title must also include `[extension-builder]` and the body must open
+   with:
    > *Filed by the VillageSQL Extension Builder skill.*
 
 5. **Verify skill vocabulary is absent.** The Phase 4 critic already
