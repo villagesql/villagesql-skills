@@ -34,11 +34,11 @@ scope) that override anything in the workflow that contradicts them.
 
 | Persona | Phase(s) | Focus | Failure Mode |
 |---|---|---|---|
-| Product Strategist | 0, 6 | Requirements and acceptance criteria | Writing criteria from vague requirements — clarify first |
-| Architect | 1, 2 | Feasibility, design, scaffold | Scaffolding before API signature verification |
-| Team Lead | 3 | Incremental build-test loop | Reporting success without showing actual test output |
-| CTO | 4 | Quality gate — approve or return | Approving without independent code review |
-| End-User | 5 | UAT against acceptance criteria | Treating criteria as rubber stamps instead of live SQL tests |
+| Product Strategist | 0, 6 | Requirements and acceptance criteria | Writing criteria that are vague, untestable, or reference functions that don't exist yet — clarify before recording |
+| Architect | 1, 2 | Feasibility, design, scaffold | Scaffolding before API signature verification; writing plausible-sounding names without reading headers |
+| Team Lead | 3 | Incremental build-test loop | Reporting success without showing actual test output; applying simplification fixes without re-running tests |
+| CTO | 4 | Quality gate — approve or return | Skipping checklist items because Phase 3 already reviewed quality; approving files not explicitly checked |
+| End-User | 5 | UAT against acceptance criteria | Treating criteria as rubber stamps; silently adjusting SQL to match output instead of amending the criteria file explicitly |
 
 ---
 
@@ -51,9 +51,10 @@ Gather through plain-text conversational questions (no UI selectors):
 1. **Extension description.** If `$ARGUMENTS` was provided, skip this.
    Otherwise ask — if vague, clarify before proceeding. Before recording
    the description, evaluate whether the request is achievable as a VEF
-   extension. If it requires a MySQL plugin or server component, stop
-   here and explain the distinction to the user — do not proceed to
-   Phase 1.
+   extension. If it requires a MySQL plugin or server component, halt:
+   explain the distinction to the user and ask them to reframe the
+   request as a VEF extension, or acknowledge it is out of scope. Do
+   not proceed to Phase 1 until the request is confirmed achievable.
 
 2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
    (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
@@ -145,8 +146,11 @@ and 2.
    (with sorted storage for key-value types). Pure-VDF extensions can
    skip the binary layout.
 
-**Gate:** Architecture recorded with function names and (if applicable)
-binary layout. Proceed to Phase 2.
+**Gate:** State the SDK version confirmed from `villagesql_config
+--version` and confirm it matches the Phase 0 session version.
+Architecture recorded in `.claude/tracking/architecture.md` with
+verified `sdk_dir`, function names, and (if applicable) binary layout.
+Proceed to Phase 2.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
@@ -245,9 +249,11 @@ binary layout. Proceed to Phase 2.
      source of truth — if `build.sh` is missing or differs, restore it
      from the template repo rather than writing a new one from scratch.
 
-**Gate:** State the result type constants extracted from the input/output
-struct header — evidence the bootstrap ran against live headers. Hand
-off to Team Lead (Phase 3).
+**Gate:** Paste a verbatim 3–5 line excerpt from the actual header file
+that defines the result type constants (e.g. the enum or `#define` block
+in the input/output struct header). The gate fails if no excerpt is
+shown — listing constant names without source text is not acceptable
+evidence. Hand off to Team Lead (Phase 3).
 
 ### Phase 3: Incremental Implementation *(Team Lead)*
 
@@ -301,10 +307,14 @@ and won't drift. `references/patterns.md` has the longer explanations.
    # Record:  perl mysql-test-run.pl --suite=/path/to/extension/mysql-test --record
    # Run:     perl mysql-test-run.pl --suite=/path/to/extension/mysql-test
    ```
-5. **CRITICAL:** Paste raw test runner output after every run. NEVER
-   claim a test passes without showing it. Paste it in full even when
-   long — do not summarize, truncate, or paraphrase. If ANY test fails,
-   STOP — debug, fix, re-run, show new output.
+5. **CRITICAL:** Show test runner output after every run. NEVER claim
+   a test passes without evidence. Output rules:
+   - If output is ≤100 lines, paste in full.
+   - If output exceeds 100 lines, save the full output to
+     `.claude/tracking/test_output_<n>.txt` and paste only: the
+     summary line (pass/fail counts) plus every FAILED test's block.
+   Never summarize passing tests in prose — show the summary line.
+   If ANY test fails, halt — debug, fix, re-run, show new output.
 6. **Code Simplification.** After all functions pass, launch three agents
    **in parallel** — send all three `Agent` tool calls in a **single
    assistant message** with `subagent_type=general-purpose`, passing the
@@ -336,10 +346,12 @@ and won't drift. `references/patterns.md` has the longer explanations.
    issues (bounds, leaks, use-after-free), and overly broad reads where
    a narrower access pattern exists.
 
-   Wait for all three. Record each agent's verbatim findings and your
-   disposition (applied / rejected, with reason) in
-   `.claude/tracking/simplification.md`. Apply every valid fix. Re-run
-   the full test suite and show output before handing off.
+   Wait for all three. Save each agent's findings and your disposition
+   (applied / rejected with reason) to `.claude/tracking/simplification.md`
+   — do not paste verbatim agent output into the conversation. Report a
+   one-line summary per agent: "N findings, M applied." Apply every
+   valid fix. Re-run the full test suite and show output before handing
+   off.
 
 **Gate:** All tests pass with output shown after simplification. Hand
 off to CTO (Phase 4).
@@ -381,12 +393,16 @@ committed (covered by the `.claude/` gitignore from Phase 2).
 ### Phase 5: User Acceptance Testing *(End-User)*
 
 1. Load `.claude/tracking/acceptance_criteria.md` and
-   `.claude/tracking/limitations.md`. Reconcile: any criterion whose
-   literal SQL conflicts with a confirmed limitation (e.g., uses a CAST
-   or operator the extension cannot support) must be amended in writing
-   before execution, with a one-line note of what was changed and why.
-   Do not silently rewrite SQL during execution — the criteria file is
-   the contract; amend it explicitly.
+   `.claude/tracking/limitations.md`. Reconcile: a criterion conflicts
+   with a limitation when the literal SQL it requires — a specific
+   operator, cast syntax, function signature, or data format — is
+   explicitly listed as unsupported in `limitations.md`. Ambiguous
+   cases (e.g., a limit of N=10 and a criterion that uses 11 rows)
+   count as conflicts; resolve conservatively. Any conflicting criterion
+   must be amended in writing before execution — rewrite the SQL to
+   use the supported alternative, and append a one-line note stating
+   what changed and which limitation it reflects. Do not silently
+   adjust SQL during execution — the criteria file is the contract.
 2. Execute each (possibly amended) criterion as a live SQL query.
 3. Present results:
 
@@ -435,22 +451,24 @@ to the user.
    workarounds. If `limitations.md` is missing but workarounds were
    used, reconstruct from `architecture.md` before proceeding.
 
-3. **Call to Action.** For each limitation, search
-   [villagesql-server issues](https://github.com/villagesql/villagesql-server/issues)
-   using `mcp__github__search_issues` (or construct a search URL if
-   unavailable). If a matching issue exists, link it in the README and
-   ask the user to 👍 it. If no matching issue exists, write a
-   complete, copy-paste-ready issue draft inline — title, description,
-   and any relevant context — then ask the user: "Want me to file this,
-   or will you copy it?" If the agent files the issue, the title must
-   include `[extension-builder]` and the body must open with:
+3. **Call to Action.** For each limitation, run a targeted search
+   against villagesql-server issues using `mcp__github__search_issues`.
+   Log the search query string used. If a matching issue exists, verify
+   relevance by checking the issue title — log the issue number and
+   title, link it in the README, and ask the user to 👍 it. A generic
+   hit (e.g. issue #1 "repo setup") is not a match; keep searching or
+   treat as no match. If no relevant issue exists, write a complete,
+   copy-paste-ready draft inline — title, description, and relevant
+   context — then ask the user: "Want me to file this, or will you copy
+   it?" If the agent files the issue, the title must include
+   `[extension-builder]` and the body must open with:
    > *Surfaced by the VillageSQL Extension Builder skill while building
    > `<extension-name>`.*
 
-   **Gate:** Every limitation must have a search result recorded here —
-   either a linked server issue or a note that the user was prompted to
-   open one. Do not mark Phase 6 complete until this is done for every
-   entry in `limitations.md`.
+   **Gate:** For every entry in `limitations.md`, record here: the
+   search query used, the matching issue number + title (or "no match"),
+   and the outcome (linked / drafted / user prompted). Phase 6 is not
+   complete until all entries are accounted for.
 
 4. **Announce the extension.** Write a complete, copy-paste-ready
    **Feature** issue draft for
@@ -523,9 +541,19 @@ restart from Phase 0.
      complete
    - `simplification.md` → Phase 3 step 6 complete
    - `cto_review.md` → Phase 4 complete
-4. Inspect the working tree: are tests passing? Is the extension
-   installed? Run `mysql-test-run.pl` against the suite to confirm
-   state before continuing. If tests fail and no `cto_review.md`
-   exists, you are mid-Phase-3.
-5. Announce the determined phase to the user before proceeding, and ask
-   for confirmation if the inventory is ambiguous.
+4. **Validate state against artifacts.** Run `mysql-test-run.pl`
+   against the suite and check whether the extension is installed.
+   Cross-check results against the artifact-determined phase:
+   - If artifacts say Phase 3+ complete but tests fail: assume
+     mid-Phase-3, regardless of what files exist. Ask the user to
+     confirm before re-entering Phase 3.
+   - If artifacts say Phase 4+ complete but the extension is not
+     installed: re-enter Phase 3 step 3 (build/install) before
+     continuing.
+   - If interrupted mid-phase (e.g. `architecture.md` exists but no
+     `limitations.md`, and scaffold exists but tests have never run):
+     treat as start of Phase 3 and confirm with the user.
+   - If artifacts and working tree agree, proceed.
+5. Announce the determined phase and working tree state to the user.
+   If there is any ambiguity or mismatch, ask for explicit confirmation
+   before proceeding — do not assume.
