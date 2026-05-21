@@ -359,15 +359,17 @@ and won't drift. `references/patterns.md` has the longer explanations.
    issues (bounds, leaks, use-after-free), and overly broad reads where
    a narrower access pattern exists.
 
-   Wait for all three. Save each agent's findings and your disposition
-   (applied / rejected with reason) to `.claude/tracking/simplification.md`
-   — do not paste verbatim agent output into the conversation. Report a
+   Wait for all three. If any agent fails or times out, re-run it alone
+   before proceeding — Phase 3 is not complete until all three results
+   are posted. Save each agent's findings and your disposition (applied /
+   rejected with reason) to `.claude/tracking/simplification.md` — do
+   not paste verbatim agent output into the conversation. Report a
    one-line summary per agent: "N findings, M applied." Apply every
    valid fix. Re-run the full test suite and show output before handing
    off.
 
-**Gate:** All tests pass with output shown after simplification. Hand
-off to CTO (Phase 4).
+**Gate:** All three simplification agents have returned results, all
+tests pass with output shown. Hand off to CTO (Phase 4).
 
 ### Phase 4: Quality Review *(CTO)*
 
@@ -382,11 +384,13 @@ Spawn one critic review:
 **Critic (Explore subagent):** Pass it the contents of
 `references/cto-checklist.md` plus the full `src/` and `mysql-test/`
 content. Task: "Verify each checklist item against the code. Cite
-file:line evidence of pass or fail for every item. Do not propose
-reuse/quality/efficiency improvements — Phase 3 already covered that.
-Your job is the checklist only. Return a verdict per item plus overall
-PASS/FAIL." If the critic strays into reuse/quality/efficiency
-suggestions, ignore those — they are out of scope for this gate.
+file:line evidence of pass or fail for every item. Your job is the
+checklist only — do not propose reuse, quality, or efficiency
+improvements; Phase 3 already covered those. If your analysis ventures
+outside the checklist, mark those observations as OUT-OF-SCOPE and
+exclude them from your verdict. Return a verdict per checklist item
+plus overall PASS/FAIL." Discard any OUT-OF-SCOPE content from the
+critic's response before writing `cto_review.md`.
 
 Write `.claude/tracking/cto_review.md` capturing the critic's verbatim
 findings plus your disposition for each item (applied / rejected with
