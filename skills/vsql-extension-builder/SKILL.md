@@ -56,6 +56,14 @@ Gather through plain-text conversational questions (no UI selectors):
    request as a VEF extension, or acknowledge it is out of scope. Do
    not proceed to Phase 1 until the request is confirmed achievable.
 
+   **PostgreSQL port detection.** If the description references an
+   existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
+   "cube extension from Postgres") — or if it isn't clear — ask: "Is
+   this a port of an existing PostgreSQL extension?" Record `pg_port:
+   true` and the source extension name in
+   `.claude/tracking/architecture.md` if yes. This flag is read in
+   Phase 1.
+
 2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
    (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
    - `~/.villagesql/credentials.txt` — created by the installer; most
@@ -108,7 +116,12 @@ Make design decisions with rationale — not as questions. Own Phases 1
 and 2.
 
 1. **Research.** For standard types, research the PostgreSQL/Standard API
-   for comprehensive coverage.
+   for comprehensive coverage. If `pg_port: true` is set in
+   `architecture.md`, read `references/pg-port-guide.md` now and build
+   the PostgreSQL Function Map (Full / Workaround / Blocked table) before
+   doing anything else in Phase 1. The map must be complete before
+   architecture decisions are made — functions discovered later cause
+   expensive rework.
 2. **Locate and verify the SDK.** Before reading any header, locate the
    staged SDK and verify its version. This must run before the
    feasibility check — Phase 1 reads against this SDK only, never the
@@ -431,6 +444,10 @@ to the user.
    - Function Reference (full signatures + NULL-handling semantics)
    - Working with custom types (only if the extension defines one —
      cover CAST limitations and how to read values back)
+   - Migrating from PostgreSQL (only if `pg_port: true` — see
+     `references/pg-port-guide.md` → "What to Put in the README";
+     must include name-mapping table, operator equivalents, behavioral
+     differences, and missing functions)
    - Known Limitations (assembled in step 2 below)
    - Testing (point to `TESTING.md`)
    - Reporting Bugs and Requesting Features (GitHub Issues link)
@@ -522,6 +539,7 @@ Detailed material lives in `references/`. Load on demand:
 | Phase 4 critic agent checklist | `references/cto-checklist.md` |
 | Implementation standards, data patterns, naming | `references/patterns.md` |
 | Build, test, paths, DDL syntax | `references/environment.md` |
+| Porting a PostgreSQL extension (type mapping, NULL semantics, operators, SRFs, charset) | `references/pg-port-guide.md` — load at Phase 1 step 1 when `pg_port: true` |
 
 ---
 
