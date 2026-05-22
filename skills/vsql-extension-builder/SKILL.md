@@ -594,6 +594,26 @@ to the user.
    "join discord.gg/KSr6whd3Fr to share feedback." Tailor to what
    actually came up during the session.
 
+**Gate — all of the following must be true before presenting the Grand
+Finale:**
+- [ ] Step 1: `README.md` complete with all required sections (including
+  "Migrating from PostgreSQL" if `pg_port: true`); `TESTING.md` written
+  and cross-checked against actual files in `mysql-test/t/`
+- [ ] Step 2: "Known Limitations" section in `README.md` assembled from
+  `limitations.md`; if `limitations.md` was missing, reconstructed first
+- [ ] Step 3: Every `limitations.md` entry has a search query logged, a
+  match outcome (issue # + title or "no match"), and a result (linked /
+  drafted / user prompted)
+- [ ] Step 4: Extension announcement Feature issue drafted and user prompted
+- [ ] Step 5: Vocabulary grep clean — zero hits for forbidden terms across
+  all committed files
+- [ ] Step 6: `.claude/` confirmed git-ignored
+- [ ] Step 7: Cleanup offer made (user accepted or declined)
+- [ ] Step 8: Grand Finale presented
+
+Do not present the Grand Finale until every box above is checked. If any
+step was skipped, complete it now — do not ask the user whether to skip.
+
 ---
 
 ## Reference Index
