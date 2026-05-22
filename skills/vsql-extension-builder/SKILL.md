@@ -246,8 +246,15 @@ Proceed to Phase 2.
       functions. Confirm by reading.
    e. Identify the file defining the input value struct and result
       struct. Confirm by reading — do not assume the filename.
-   f. Note headers under any `preview/` subdirectory. Preview API use
-      must be recorded in `.claude/tracking/limitations.md`.
+   f. Note headers under any `preview/` subdirectory. When a preview API
+      would enable a meaningfully better implementation — variable-length
+      storage, a richer type interface, etc. — present it as an option:
+      explain what it unlocks and that it is not in the stable SDK (may
+      change between VillageSQL releases). Let the user decide. If they
+      opt in, record the choice in `.claude/tracking/architecture.md`
+      under a `preview_apis:` key. Either way, note preview API use in
+      `.claude/tracking/limitations.md` and the README Known Limitations
+      section so users building against the extension know what to expect.
 
    **Extract and record** in `.claude/tracking/architecture.md`: result
    type constants, input/output struct names and field names, builder
