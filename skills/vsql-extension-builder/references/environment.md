@@ -34,6 +34,20 @@ perl mysql-test-run.pl --suite=/path/to/extension-name/mysql-test
 perl mysql-test-run.pl --suite=/path/to/extension-name/mysql-test --record
 ```
 
+## MTR test file syntax
+
+**Comments:** use `#` for comments, not `--`. A bare `--` prefix is not
+a comment — it is parsed as a command prefix and will cause a syntax
+error or unexpected behaviour.
+
+```
+# This is a correct comment
+-- This is NOT a comment — do not use this form
+```
+
+**`--echo` is a directive, not a comment prefix.** It prints its
+argument to the test output and appears in the `.result` file.
+
 ## Common mysqltest directives
 
 ```
@@ -66,6 +80,21 @@ SELECT vsql_webhook.webhook_call('http://127.0.0.1:18888/');
 - VEB directory: query the server (`SHOW VARIABLES LIKE 'veb_dir'`) —
   that value is authoritative. Typical dev-build location is
   `{build_dir}/villagesql/lib/veb/` but production installs vary.
+
+## Row size limit for fixed-length custom types
+
+InnoDB's maximum row size is ~65535 bytes. Fixed-length types (where
+`persisted_length` is a constant, not variable) consume their full
+allocation in every row regardless of actual content. A single column
+of `persisted_length = 65535` will fail `CREATE TABLE` with
+`ERROR 1118: Row size too large`.
+
+**Before finalizing `persisted_length` in Phase 1:** run a quick
+sanity check — attempt `CREATE TABLE t (col <extension>.<type>)` with
+the proposed value. If it fails, reduce the value (65000 is a safe
+ceiling that leaves room for row overhead and additional columns). Do
+not skip this test — the failure only surfaces at table-creation time,
+not at build or install time.
 
 ## DDL syntax for custom types
 
