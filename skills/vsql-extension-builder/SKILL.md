@@ -40,10 +40,16 @@ treat the conversation thread as a signal channel, not a log.
   Verbose state (file contents read, agent findings, build output, test
   output, search results) goes to `.claude/tracking/`. The conversation
   gets a summary line.
-- **Do not echo file contents into the conversation when reading them.**
+- **Never paste source code into the conversation.** `.cc`, `.h`,
+  `.test`, and `.result` files belong on disk, not in the conversation
+  thread. When passing source files to a subagent, embed them in the
+  subagent's prompt — do not print them in the conversation first.
+  When implementing a function, state "implemented `func_name`" — do
+  not print the implementation.
+- **Do not echo any file contents into the conversation when reading.**
   Read headers, source files, and references silently. State what you
   found; do not paste what you read (except where a gate explicitly
-  requires an excerpt).
+  requires a verbatim excerpt).
 - **Phase transitions are two lines maximum:** what gate evidence was
   met, and which phase is next. Not a recap of all work done.
 - **Build failure output:** if cmake or make output exceeds 50 lines,
@@ -295,7 +301,9 @@ evidence. Hand off to Team Lead (Phase 3).
 
 ### Phase 3: Incremental Implementation *(Team Lead)*
 
-Report progress function-by-function; never summarize across functions.
+Report progress function-by-function with one-line status updates (e.g.,
+"implemented `func_name`"); never paste implementations or summarize across
+functions.
 
 **Pre-implementation invariants** — apply these while writing every
 function, not after. Phase 4 reviewers will fail the run on any of them,
@@ -355,9 +363,10 @@ and won't drift. `references/patterns.md` has the longer explanations.
    If ANY test fails, halt — debug, fix, re-run, show new output.
 6. **Code Simplification.** After all functions pass, launch three agents
    **in parallel** — send all three `Agent` tool calls in a **single
-   assistant message** with `subagent_type=general-purpose`, passing the
-   full `src/` content as context. Do not continue until all three
-   results have returned.
+   assistant message** with `subagent_type=general-purpose`. Embed the
+   `src/` file contents directly in each subagent's prompt — do not print
+   them to the conversation. Do not continue until all three results have
+   returned.
 
    **Scope for all three agents:** Review only the new extension's source
    files (`src/`). Do not search or reference other extensions. For each
@@ -406,9 +415,9 @@ verification that the invariants and standards in
 
 Spawn one critic review:
 
-**Critic (Explore subagent):** Pass it the contents of
-`references/cto-checklist.md` plus the full `src/` and `mysql-test/`
-content. Task: "Verify each checklist item against the code. Cite
+**Critic (Explore subagent):** Embed `references/cto-checklist.md` plus
+the full `src/` and `mysql-test/` content directly in the subagent's
+prompt — do not print them to the conversation first. Task: "Verify each checklist item against the code. Cite
 file:line evidence of pass or fail for every item. Your job is the
 checklist only — do not propose reuse, quality, or efficiency
 improvements; Phase 3 already covered those. If your analysis ventures
