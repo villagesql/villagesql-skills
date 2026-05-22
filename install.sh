@@ -52,6 +52,19 @@ install_to() {
   echo
 }
 
+# Install the repo as an extension/plugin by symlinking the repo root.
+# $1 = target path (the symlink to create), $2 = agent label for output
+install_extension_to() {
+  local target="$1" label="$2"
+  mkdir -p "$(dirname "$target")"
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    printf "  %-28s skipped (non-symlink exists)\n" "$label"
+    return
+  fi
+  ln -sfn "$SRC_DIR" "$target"
+  printf "  %-28s installed\n" "$label"
+}
+
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 has_dir() { [ -d "$1" ]; }
 
@@ -81,13 +94,13 @@ fi
 
 # Gemini CLI (detect by command; dir alone is ambiguous with Antigravity)
 if has_cmd gemini; then
-  install_to "$HOME/.gemini/skills" "Gemini CLI"
+  install_extension_to "$HOME/.gemini/extensions/villagesql" "Gemini CLI"
   agents_found=$((agents_found + 1))
 fi
 
-# Antigravity
-if has_cmd antigravity || has_dir "$HOME/.gemini/antigravity"; then
-  install_to "$HOME/.gemini/antigravity/skills" "Antigravity"
+# Antigravity (agy) — replaced Gemini CLI; uses ~/.gemini/antigravity-cli/plugins/
+if has_cmd agy; then
+  install_extension_to "$HOME/.gemini/antigravity-cli/plugins/villagesql" "Antigravity (agy)"
   agents_found=$((agents_found + 1))
 fi
 
