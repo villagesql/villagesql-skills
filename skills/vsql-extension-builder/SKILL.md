@@ -543,8 +543,7 @@ to the user.
    will you copy it?" VillageSQL uses these to consider adding community
    extensions to the website. Suggested title:
    `[Community Extension] <extension-name>`. If the agent files it, the
-   title must also include `[extension-builder]` and the body must open
-   with:
+   body must open with:
    > *Filed by the VillageSQL Extension Builder skill.*
 
 5. **Verify skill vocabulary is absent.** The Phase 4 critic already
