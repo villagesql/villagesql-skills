@@ -5,6 +5,25 @@ Load this file at the start of Phase 1 when `pg_port: true` is recorded in
 
 ## Pre-Port Analysis (do this before architecture.md)
 
+**Source research — best-effort, two lookups max. Do not block or retry.**
+
+1. **Official docs.** Check postgresql.org for the extension (e.g.
+   `https://www.postgresql.org/docs/current/<name>.html`). If it's a
+   contrib extension it will be there; third-party extensions won't be.
+
+2. **Source repo.** Search for the extension's GitHub repo
+   (`<name> postgresql extension site:github.com`). If found, fetch:
+   - The README for function signatures, NULL semantics, and operator
+     mappings.
+   - The regression test file (`sql/<name>.sql` or similar) — concrete
+     input/output pairs to adapt directly into acceptance criteria.
+     These are higher-value than prose docs for implementation.
+
+If either lookup fails or returns nothing useful, proceed from the user's
+description and your own knowledge of the extension. Record what was found
+(or "not found") in `architecture.md` under `## Source Research` before
+continuing.
+
 Enumerate the source extension's full function list and categorize each:
 
 | Category | Meaning |
