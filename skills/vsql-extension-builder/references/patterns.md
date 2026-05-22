@@ -31,6 +31,13 @@ from Phase 2 bootstrap — anything named here is illustrative.
   `push_back(c)` in a loop. Only allocate `std::string` for the final
   in-memory representation. Use `.reserve()`.
 
+- **Move semantics in initializer lists.** Do not move from a variable
+  and also use it in the same initializer list — C++ does not guarantee
+  evaluation order within brace-init lists. `std::pair{key, {std::move(key), val}}`
+  is undefined behaviour: `key` may be moved before the first element is
+  read. Move into a local first, then construct: `auto k = std::move(key);
+  return {k, {std::move(k), val}};` — or copy where the value is small.
+
 - **No file-scope `using namespace`.** Per-function `using` declarations
   or fully-qualified names only.
 
