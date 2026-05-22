@@ -58,6 +58,24 @@ independently — do not summarize the source, do not trust prior summaries.
 - [ ] No `using namespace` directives at file scope.
 - [ ] Any preview API use is documented in `limitations.md`.
 
+## Hot-Path Performance
+
+These are static checks — code review, not benchmarks.
+
+- [ ] No heap allocation (malloc/new/std::vector construction) inside VDF
+      implementations or type encode/decode functions. Allocations belong in
+      initialization, not per-row execution.
+- [ ] No unnecessary string copies before writing into `result->str_buf` or
+      the typed output buffer. Write directly where possible.
+- [ ] Null input checked and returned early (before any real work) in every
+      VDF implementation.
+- [ ] No shared mutable state accessed without a lock. If shared state is
+      unavoidable, confirm the lock is as narrow as possible.
+- [ ] No I/O, syscalls, or blocking operations on the hot path (e.g. file
+      reads, `gettimeofday` in a tight loop, DNS lookups). If the extension's
+      purpose requires I/O (e.g. vsql-http), document the per-call cost in
+      `limitations.md`.
+
 ## Files Shipped
 
 - [ ] `LICENSE` present (GPL-2.0 from template, unmodified).
