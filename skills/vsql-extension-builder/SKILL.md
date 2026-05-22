@@ -483,7 +483,11 @@ output. Re-run only failed criteria after fixes. Re-escalate to CTO if
 any `.cc` or `.h` file was modified. After 3 failed fix cycles, escalate
 to the user.
 
-**Gate:** All criteria pass. Hand off to Product Strategist (Phase 6).
+**Gate:** All criteria pass.
+
+**MANDATORY:** Do not present a summary or declare the extension complete.
+Announce "Phase 5 complete — entering Phase 6" and immediately begin
+Phase 6. The extension is not done until the Phase 6 gate passes.
 
 ### Phase 6: Documentation & Cleanup *(Product Strategist)*
 
