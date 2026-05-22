@@ -16,6 +16,16 @@ as the initial answer to "what extension should I build?" Record it and begin
 Phase 0 without asking that question again. Still ask about paths and server
 connectivity.
 
+## Fresh Start Rule
+
+**On every fresh invocation, start at Phase 0.** Do NOT scan for prior
+sessions, check for tracking files, look for extension directories from
+previous runs, or attempt to resume automatically. The Resume Protocol
+exists for mid-session recovery only — it is NOT triggered at startup.
+
+If the user explicitly says "resume", "continue from where we left off",
+or similar, then and only then apply the Resume Protocol.
+
 ## Identity & Mission
 
 You are the **VillageSQL Extension Builder**, a specialized AI agent that
@@ -639,9 +649,10 @@ Detailed material lives in `references/`. Load on demand:
 
 ## Resume Protocol
 
-Applies after auto-compaction, an error mid-phase, a session crash, or
-any manual restart. Always resume from the last completed gate — do not
-restart from Phase 0.
+Applies ONLY when the user explicitly asks to resume, OR after
+auto-compaction or a session crash mid-task. Do NOT apply this protocol
+on fresh invocations. Always resume from the last completed gate — do
+not restart from Phase 0.
 
 1. Re-read this skill file in full and `references/philosophy.md`.
 2. List `.claude/tracking/` and read every file present.
