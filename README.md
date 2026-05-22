@@ -1,9 +1,7 @@
 # villagesql-skills
 
-Agent skills for working with [VillageSQL](https://villagesql.com). These
-skills run inside [Claude Code](https://claude.com/claude-code) and other
-agent runtimes that support the
-[Agent Skills](https://docs.claude.com/en/docs/claude-code/skills) format.
+Agent skills for working with [VillageSQL](https://villagesql.com). Skills run
+in Claude Code, Gemini CLI, agy, Codex, Cursor, Amp, and Kiro.
 
 ## Skills
 
@@ -21,8 +19,9 @@ More skills will be added here over time.
 curl -sSL https://villagesql.com/skills | bash
 ```
 
-Clones the repo to `~/.local/share/villagesql-skills` and symlinks every
-skill into `~/.claude/skills/`. Re-running updates in place.
+Detects which agents are installed and configures each one. Supports Claude
+Code, Gemini CLI, agy, Codex, Cursor, Amp, and Kiro. Re-running updates
+in place.
 
 Override locations with env vars:
 
@@ -34,6 +33,8 @@ CLAUDE_SKILLS_DIR=~/.claude/skills \
 
 ### Manual install (recommended for contributors)
 
+#### Claude Code
+
 ```bash
 git clone https://github.com/villagesql/villagesql-skills.git ~/code/villagesql-skills
 mkdir -p ~/.claude/skills
@@ -43,7 +44,27 @@ ln -s ~/code/villagesql-skills/skills/vsql-extension-builder ~/.claude/skills/vs
 Verify the skill is loaded by typing `/` in Claude Code — the skill name
 should appear in the slash command list.
 
-To update later:
+#### Gemini CLI
+
+```bash
+git clone https://github.com/villagesql/villagesql-skills.git ~/code/villagesql-skills
+mkdir -p ~/.gemini/extensions
+ln -s ~/code/villagesql-skills ~/.gemini/extensions/villagesql
+```
+
+Gemini CLI reads `gemini-extension.json` and loads `GEMINI.md` as context.
+
+#### agy
+
+```bash
+git clone https://github.com/villagesql/villagesql-skills.git ~/code/villagesql-skills
+mkdir -p ~/.gemini/antigravity-cli/plugins
+ln -s ~/code/villagesql-skills ~/.gemini/antigravity-cli/plugins/villagesql
+```
+
+agy reads `plugin.json` and discovers skills from the `skills/` subdirectory.
+
+To update later (all agents share the same clone):
 
 ```bash
 git -C ~/code/villagesql-skills pull
