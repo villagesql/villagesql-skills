@@ -567,6 +567,33 @@ to the user.
    2. `UNINSTALL EXTENSION <extension_name>;`
    3. `rm -rf <veb_dir>/_expanded/<extension_name>`
 
+8. **Grand Finale.** Present a structured closing summary to the user.
+   This is the handoff — someone who wasn't in the session should be able
+   to read it and understand exactly what was built and what comes next.
+
+   **What you built**
+   - Extension name (install name and repo name)
+   - Number of functions and one-line description of what the extension does
+   - Any custom types defined, with a one-sentence description of the
+     storage format
+   - The `INSTALL EXTENSION` command and a one-liner "quick start" SQL
+     example that demonstrates the most common use case
+
+   **Known limitations**
+   For each entry in `.claude/tracking/limitations.md`, one line stating
+   the constraint and its outcome: linked issue # (with URL), drafted
+   issue (copy-paste ready inline), or "no upstream issue exists."
+
+   **Commit**
+   - Run `git log -1 --oneline` and show the SHA and summary line.
+
+   **What to do next**
+   Three concrete, specific items — not generic advice. Examples: "👍 issue
+   #NNN to signal demand for aggregate function support," "run
+   `perl mysql-test-run.pl --suite=mysql-test` after any code change,"
+   "join discord.gg/KSr6whd3Fr to share feedback." Tailor to what
+   actually came up during the session.
+
 ---
 
 ## Reference Index
