@@ -567,7 +567,7 @@ to the user.
    2. `UNINSTALL EXTENSION <extension_name>;`
    3. `rm -rf <veb_dir>/_expanded/<extension_name>`
 
-8. **Grand Finale.** Present a structured closing summary to the user.
+8. **Summary.** Present a structured closing summary to the user.
    This is the handoff — someone who wasn't in the session should be able
    to read it and understand exactly what was built and what comes next.
 
@@ -609,9 +609,9 @@ Finale:**
   all committed files
 - [ ] Step 6: `.claude/` confirmed git-ignored
 - [ ] Step 7: Cleanup offer made (user accepted or declined)
-- [ ] Step 8: Grand Finale presented
+- [ ] Step 8: Summary presented
 
-Do not present the Grand Finale until every box above is checked. If any
+Do not present the Summary until every box above is checked. If any
 step was skipped, complete it now — do not ask the user whether to skip.
 
 ---
