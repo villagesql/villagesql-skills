@@ -2,5 +2,18 @@
   "name": "villagesql",
   "version": "1.0.0",
   "description": "Skills for VillageSQL development — build extensions, sync issues, review docs, write releases, and more.",
+  "repository": "https://github.com/villagesql/villagesql-skills",
+  "license": "Apache-2.0",
+  "keywords": ["villagesql", "mysql", "extensions", "database", "developer-tools"],
+  "interface": {
+    "displayName": "VillageSQL Skills",
+    "shortDescription": "Build extensions, sync issues, review docs, and draft release posts for VillageSQL.",
+    "developerName": "VillageSQL",
+    "category": "Development",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://villagesql.com",
+    "brandColor": "#CC66FF",
+    "composerIcon": "./assets/icon.svg"
+  },
   "skills": "./skills/"
 }
