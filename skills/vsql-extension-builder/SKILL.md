@@ -174,11 +174,14 @@ and 2.
    (with sorted storage for key-value types). Pure-VDF extensions can
    skip the binary layout.
 
-**Gate:** State the SDK version confirmed from `villagesql_config
---version` and confirm it matches the Phase 0 session version.
-Architecture recorded in `.claude/tracking/architecture.md` with
-verified `sdk_dir`, function names, and (if applicable) binary layout.
-Proceed to Phase 2.
+**Gate:** Present the architecture summary in the conversation — SDK
+version (confirmed from `villagesql_config --version`, matching Phase 0
+session version), function names with rationale, and binary layout if
+applicable. This is the one phase where verbose conversation output is
+expected: the user should be able to review and push back before Phase 2
+commits the scaffold. Save the same content to
+`.claude/tracking/architecture.md`. Proceed to Phase 2 only after
+presenting the summary.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
