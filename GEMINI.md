@@ -4,13 +4,15 @@ VillageSQL is a MySQL tracking fork with the VillageSQL Extension Framework (VEF
 a system for building custom SQL functions and types without modifying server code.
 Extensions are packaged as `.veb` files and installed at runtime.
 
-All repos live under `/Users/villageadam/Documents/GitHub/`. Key ones:
+Key repos (cloned locally — check `AGENTS.local.md` for machine-specific paths):
 - `villagesql-server/` — core MySQL fork with VEF
 - `vsql-ai/`, `vsql-crypto/`, `vsql-uuid/`, `vsql-network-address/`, `vsql-http/`, `vsql-cube/` — official extensions
 - `villagesql-docs/` — Mintlify documentation (villagesql.com/docs)
 - `villagesql-website/` — Eleventy marketing site (villagesql.com)
 
-Server socket: `/tmp/mysql.sock`, port 3306. Check running with `pgrep -a mysqld`.
+Server default socket: `/tmp/mysql.sock`, port 3306. Verify the actual socket
+from `pgrep -a mysqld` output before connecting. Check `AGENTS.local.md` for
+machine-specific overrides.
 
 ## Commit Standards
 
