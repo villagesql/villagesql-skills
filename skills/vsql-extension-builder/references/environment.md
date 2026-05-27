@@ -71,7 +71,8 @@ SELECT vsql_webhook.webhook_call('http://127.0.0.1:18888/');
 
 ## Key paths
 
-- Staged SDK: `{build_dir}/villagesql-extension-sdk-*/` (newest by mtime)
+- Staged SDK: `{build_dir}/villagesql-extension-sdk-*/` (highest semver —
+  filter to directories only, extract MAJOR.MINOR.PATCH, select the max)
 - SDK version: `{sdk_dir}/bin/villagesql_config --version`
 - SDK headers: `{sdk_dir}/include/` and `{sdk_dir}/include-dev/` (typed
   API may live in either; check both — see Phase 2 bootstrap)
@@ -115,7 +116,7 @@ into a column of that type or call the type's constructor VDF directly.
 - Verify loaded: call one of its functions. There is no `SHOW EXTENSIONS`.
 - Uninstall: `UNINSTALL EXTENSION <extension_name>;` — no `IF EXISTS`.
   Use `|| true` in shell. ERROR 3219 when uninstalling a not-installed
-  extension is safe to ignore.
+  extension is safe to safe to ignore.
 - Reinstall (shell): run `UNINSTALL` and `INSTALL` as separate `mysql -e`
   calls.
 - Remove cache: `rm -rf <veb_dir>/_expanded/<extension_name>`
