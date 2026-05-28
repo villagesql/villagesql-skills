@@ -344,12 +344,11 @@ function; Phase 4 will fail the run on any violation.
    conventions). **Test files are user-facing documentation**, not a log
    of how the skill thinks about the work. Write `.test` comments that
    describe the behavior being asserted to a future maintainer who has
-   never read this skill. Forbidden vocabulary in any committed `.test`
-   or `.result` file: `Criterion N`, `Phase N`, `Behavior probe`, `UAT`,
-   `acceptance_criteria`, `Persona`. If a comment is a paraphrase of an
-   acceptance criterion, rewrite it as a behavior description
-   ("Validation rejects uppercase prefix" — not "Criterion 5: uppercase
-   prefix").
+   never read this skill. Do not use any vocabulary from the forbidden
+   terms list in `references/cto-checklist.md` → Testing Integrity. If a
+   comment is a paraphrase of an acceptance criterion, rewrite it as a
+   behavior description ("Validation rejects uppercase prefix" — not
+   "Criterion 5: uppercase prefix").
 3. Build, package, and install. When reinstalling via shell, run
    `UNINSTALL` and `INSTALL` as **separate** `mysql -e` invocations.
    **After first install,** run the behavioral probes deferred from
@@ -654,8 +653,13 @@ on fresh invocations. Always resume from the last completed gate — do
 not restart from Phase 0.
 
 1. Re-read this skill file in full and `references/philosophy.md`.
-2. List `.claude/tracking/` and read every file present.
-3. Determine the last completed phase using the file inventory:
+2. Check whether an extension directory exists in the current working
+   directory. If no extension directory and no `.claude/tracking/` files
+   can be found, there is nothing to resume — fall back to the Fresh
+   Start Rule and begin at Phase 0. Do not attempt to reconstruct state
+   from conversation alone.
+3. List `.claude/tracking/` and read every file present.
+4. Determine the last completed phase using the file inventory:
    - `acceptance_criteria.md` → Phase 0 drafted; written by Phase 2
    - `architecture.md` (with feasibility + binary layout if applicable)
      → Phases 1–2 complete
@@ -663,7 +667,7 @@ not restart from Phase 0.
      complete
    - `simplification.md` → Phase 3 step 6 complete
    - `cto_review.md` → Phase 4 complete
-4. **Validate state against artifacts.** Run `mysql-test-run.pl`
+5. **Validate state against artifacts.** Run `mysql-test-run.pl`
    against the suite and check whether the extension is installed.
    Cross-check results against the artifact-determined phase:
    - If artifacts say Phase 3+ complete but tests fail: assume
@@ -676,6 +680,6 @@ not restart from Phase 0.
      `limitations.md`, and scaffold exists but tests have never run):
      treat as start of Phase 3 and confirm with the user.
    - If artifacts and working tree agree, proceed.
-5. Announce the determined phase and working tree state to the user.
+6. Announce the determined phase and working tree state to the user.
    If there is any ambiguity or mismatch, ask for explicit confirmation
    before proceeding — do not assume.
