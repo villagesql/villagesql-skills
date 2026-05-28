@@ -45,9 +45,10 @@ Assess all capabilities from the typed API headers (`vsql.h` and the
 
 - **Preview capabilities.** Headers under a `preview/` subdirectory are
   preview capabilities — documented but unstable across server builds.
-  They may include column storage, index hooks, system variables, and
-  background threads. If a preview API is needed, record it in
-  `.claude/tracking/limitations.md` so it surfaces in the README.
+  Read what is actually present; do not assume specific APIs exist. If a
+  preview API would meaningfully improve the implementation, present the
+  trade-off to the user (see Phase 2 step 2f). Record any preview API use
+  in `.claude/tracking/limitations.md` so it surfaces in the README.
 
 ## Behavior-discoverable (after first install in Phase 3)
 

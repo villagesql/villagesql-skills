@@ -42,34 +42,8 @@ scope) that override anything in the workflow that contradicts them.
 
 ## Context Management
 
-This skill runs across many phases and fix cycles. Context is finite —
-treat the conversation thread as a signal channel, not a log.
-
-**Rules that apply throughout every phase:**
-- **Tracking files are the record; the conversation is the signal.**
-  Verbose state (file contents read, agent findings, build output, test
-  output, search results) goes to `.claude/tracking/`. The conversation
-  gets a summary line.
-- **Never paste source code into the conversation.** `.cc`, `.h`,
-  `.test`, and `.result` files belong on disk, not in the conversation
-  thread. When passing source files to a subagent, embed them in the
-  subagent's prompt — do not print them in the conversation first.
-  When implementing a function, state "implemented `func_name`" — do
-  not print the implementation.
-- **Do not echo any file contents into the conversation when reading.**
-  Read headers, source files, and references silently. State what you
-  found; do not paste what you read (except where a gate explicitly
-  requires a verbatim excerpt).
-- **Phase transitions are two lines maximum:** what gate evidence was
-  met, and which phase is next. Not a recap of all work done.
-- **Build failure output:** if cmake or make output exceeds 50 lines,
-  save the full output to `.claude/tracking/build_output_<n>.txt` and
-  paste only the error lines. Never paste a full cmake configuration
-  trace into the conversation.
-- **Proactive save:** if many phases have completed or many fix cycles
-  have run, save current state to tracking files before continuing. The
-  resume protocol reconstructs from tracking files — keeping them
-  current reduces the cost of any compaction.
+Read `references/context-hygiene.md` at the start of every phase and keep
+it active. Tracking files are the record; the conversation is the signal.
 
 ## Persona Overview
 
@@ -200,11 +174,14 @@ and 2.
    (with sorted storage for key-value types). Pure-VDF extensions can
    skip the binary layout.
 
-**Gate:** State the SDK version confirmed from `villagesql_config
---version` and confirm it matches the Phase 0 session version.
-Architecture recorded in `.claude/tracking/architecture.md` with
-verified `sdk_dir`, function names, and (if applicable) binary layout.
-Proceed to Phase 2.
+**Gate:** Present the architecture summary in the conversation — SDK
+version (confirmed from `villagesql_config --version`, matching Phase 0
+session version), function names with rationale, and binary layout if
+applicable. This is the one phase where verbose conversation output is
+expected: the user should be able to review and push back before Phase 2
+commits the scaffold. Save the same content to
+`.claude/tracking/architecture.md`. Proceed to Phase 2 only after
+presenting the summary.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
@@ -322,27 +299,9 @@ Report progress function-by-function with one-line status updates (e.g.,
 "implemented `func_name`"); never paste implementations or summarize across
 functions.
 
-**Pre-implementation invariants** — apply these while writing every
-function, not after. Phase 4 reviewers will fail the run on any of them,
-and re-writing 10+ entry points to add them retroactively is the
-single biggest cause of context churn:
-
-- Every SQL entry point (type-system ops AND VDFs) is wrapped in
-  `try/catch (...)`. Use function-try-block syntax. No exceptions.
-- No file-scope `using namespace`. Prefer per-symbol `using` declarations
-  (e.g. `using vsql::CustomArg;`) at the top of each translation unit;
-  fall back to fully-qualified names only when two namespaces would
-  otherwise collide or in template contexts where the declaration site
-  is ambiguous.
-- Null check is the first thing inside the function body, before any
-  other field access.
-- Bounds check before every `memcpy`/`memset` against the destination
-  buffer size.
-- No `std::string` allocation in parse hot paths — use `std::string_view`
-  and `.reserve()` when a `std::string` is genuinely needed.
-
-These rules are stable C++ idiom — they don't depend on VEF API names
-and won't drift. `references/patterns.md` has the longer explanations.
+Before writing any entry point, re-read **Technical Standards & Safety
+Patterns** in `references/patterns.md` — those invariants apply to every
+function; Phase 4 will fail the run on any violation.
 
 1. Implement using only names extracted during Phase 2 bootstrap — never
    names from `references/patterns.md`.
@@ -642,6 +601,7 @@ Detailed material lives in `references/`. Load on demand:
 
 | When you need... | Read |
 |---|---|
+| Context hygiene rules (per-phase) | `references/context-hygiene.md` |
 | Core principles, scope, gate rules | `references/philosophy.md` |
 | VEF capability probes (headers + behavior) | `references/capabilities.md` |
 | Phase 4 critic agent checklist | `references/cto-checklist.md` |

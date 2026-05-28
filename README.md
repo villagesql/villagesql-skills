@@ -103,6 +103,26 @@ A few conventions:
 - Match the voice of existing skills: terse, imperative, no marketing
   language.
 
+### Testing changes locally
+
+The quick installer copies files to `~/.local/share/villagesql-skills/` rather
+than symlinking to your clone. If you used the quick installer, your agent reads
+that copy — not your working branch.
+
+To test local changes, re-point the Claude Code symlink directly to your clone:
+
+```bash
+rm ~/.claude/skills/vsql-extension-builder
+ln -s ~/code/villagesql-skills/skills/vsql-extension-builder ~/.claude/skills/vsql-extension-builder
+```
+
+Branch switches are then live immediately. When you're done, re-running the
+quick installer restores the managed copy.
+
+If you add a new file to `references/`, also update the install script in
+`villagesql-website/src/skills` so it gets included for users of the quick
+installer.
+
 ## License
 
 Apache-2.0 — see [`LICENSE`](LICENSE).

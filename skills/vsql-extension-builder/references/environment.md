@@ -71,7 +71,8 @@ SELECT vsql_webhook.webhook_call('http://127.0.0.1:18888/');
 
 ## Key paths
 
-- Staged SDK: `{build_dir}/villagesql-extension-sdk-*/` (newest by mtime)
+- Staged SDK: `{build_dir}/villagesql-extension-sdk-*/` (highest semver —
+  filter to directories only, extract MAJOR.MINOR.PATCH, select the max)
 - SDK version: `{sdk_dir}/bin/villagesql_config --version`
 - SDK headers: `{sdk_dir}/include/` and `{sdk_dir}/include-dev/` (typed
   API may live in either; check both — see Phase 2 bootstrap)
