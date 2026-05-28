@@ -105,9 +105,10 @@ A few conventions:
 
 ### Testing changes locally
 
-The quick installer copies files to `~/.local/share/villagesql-skills/` rather
-than symlinking to your clone. If you used the quick installer, your agent reads
-that copy — not your working branch.
+The quick installer clones the repo to `~/.local/share/villagesql-skills/` and
+symlinks skills from there into your agent directories — not from your working
+clone. If you used the quick installer, your agent reads that managed copy, not
+your working branch.
 
 To test local changes, re-point the Claude Code symlink directly to your clone:
 
