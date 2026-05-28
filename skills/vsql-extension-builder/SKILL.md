@@ -392,7 +392,10 @@ function; Phase 4 will fail the run on any violation.
    slop patterns — unnecessary defensiveness for conditions the VEF
    contract makes impossible, over-abstraction for a single caller,
    redundant comments that restate the code, empty catch blocks,
-   indirection layers that serve no purpose.
+   indirection layers that serve no purpose; (4) unnecessary C++ casts —
+   `static_cast` on a value already of the correct type, casting to the
+   same type twice, or `reinterpret_cast` where the typed API already
+   returns the right type.
 
    **Agent 2 — Quality:** Flag redundant state, parameter sprawl, copy-
    paste variation across functions, leaky abstractions, stringly-typed
@@ -604,8 +607,13 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
    Three concrete, specific items — not generic advice. Examples: "👍 issue
    #NNN to signal demand for aggregate function support," "run
    `perl mysql-test-run.pl --suite=mysql-test` after any code change,"
-   "join discord.gg/KSr6whd3Fr to share feedback." Tailor to what
-   actually came up during the session.
+   "open a GitHub Issue if you hit a bug." Tailor to what actually came
+   up during the session.
+
+   **Skill feedback** — Always include this line verbatim: "Share feedback
+   on the extension builder skill in #extensions at
+   https://discord.gg/KSr6whd3Fr — what worked, what was confusing, what
+   you had to redo."
 
 **Gate — all of the following must be true before presenting the Grand
 Finale:**
