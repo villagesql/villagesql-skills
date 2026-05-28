@@ -65,11 +65,18 @@ Gather through plain-text conversational questions (no UI selectors):
 
 1. **Extension description.** If `$ARGUMENTS` was provided, skip this.
    Otherwise ask — if vague, clarify before proceeding. Before recording
-   the description, evaluate whether the request is achievable as a VEF
-   extension. If it requires a MySQL plugin or server component, halt:
-   explain the distinction to the user and ask them to reframe the
-   request as a VEF extension, or acknowledge it is out of scope. Do
-   not proceed to Phase 1 until the request is confirmed achievable.
+   the description, apply a narrow scope check: halt only if the request
+   is clearly not a SQL extension at all — a GUI application, a standalone
+   binary unrelated to MySQL, an OS driver. Explain the VEF scope and ask
+   the user to reframe.
+
+   Do not make achievability judgments beyond this. Phase 0 has no SDK
+   access and cannot evaluate preview capabilities — any "this requires a
+   server component" call made here will be wrong when a preview API
+   (background threads, SQL sessions, sys vars, etc.) would enable it.
+   Phase 1 reads the SDK, including preview headers, and is the real
+   feasibility gate. If the request seems ambitious or unusual, note the
+   question and proceed.
 
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
@@ -161,11 +168,23 @@ and 2.
    Record the verified `sdk_dir` in
    `.claude/tracking/architecture.md`.
 3. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory
-   *from the verified SDK* and answer the header-discoverable questions
-   in `references/capabilities.md`. Two probes (aggregate-function
-   support, extension upgrade path) need a live install and run in
-   Phase 3. Write confirmed constraints to
-   `.claude/tracking/limitations.md` immediately.
+   *from the verified SDK*, then also list and read any headers under
+   `preview/`. Answer the header-discoverable questions in
+   `references/capabilities.md`. Two probes (aggregate-function support,
+   extension upgrade path) need a live install and run in Phase 3.
+
+   Produce two findings:
+   - **Stable-only scope**: what the extension can do using only non-preview
+     headers
+   - **With preview APIs**: what additionally becomes possible, naming the
+     specific preview headers involved and stating that they may change
+     between VillageSQL releases
+
+   If the user's request requires preview APIs to be fully realized, present
+   this trade-off now — before Phase 2 commits any scaffold. Record the
+   user's stable-vs-preview decision in `.claude/tracking/architecture.md`
+   under a `preview_apis:` key. Write confirmed constraints (for whichever
+   path the user chose) to `.claude/tracking/limitations.md` immediately.
 4. **Function names.** Pick the SQL function names. Apply the conventions
    in `references/patterns.md` → Function Naming Conventions. Record in
    `.claude/tracking/architecture.md`.
@@ -176,12 +195,13 @@ and 2.
 
 **Gate:** Present the architecture summary in the conversation — SDK
 version (confirmed from `villagesql_config --version`, matching Phase 0
-session version), function names with rationale, and binary layout if
-applicable. This is the one phase where verbose conversation output is
-expected: the user should be able to review and push back before Phase 2
-commits the scaffold. Save the same content to
-`.claude/tracking/architecture.md`. Proceed to Phase 2 only after
-presenting the summary.
+session version), the stable-vs-preview decision (including trade-offs if
+preview APIs are involved), function names with rationale, and binary
+layout if applicable. This is the one phase where verbose conversation
+output is expected: the user should be able to review and push back before
+Phase 2 commits the scaffold. Save the same content to
+`.claude/tracking/architecture.md`. Proceed to Phase 2 only after the
+user has confirmed the approach.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
@@ -233,15 +253,13 @@ presenting the summary.
       functions. Confirm by reading.
    e. Identify the file defining the input value struct and result
       struct. Confirm by reading — do not assume the filename.
-   f. Note headers under any `preview/` subdirectory. When a preview API
-      would enable a meaningfully better implementation — variable-length
-      storage, a richer type interface, etc. — present it as an option:
-      explain what it unlocks and that it is not in the stable SDK (may
-      change between VillageSQL releases). Let the user decide. If they
-      opt in, record the choice in `.claude/tracking/architecture.md`
-      under a `preview_apis:` key. Either way, note preview API use in
-      `.claude/tracking/limitations.md` and the README Known Limitations
-      section so users building against the extension know what to expect.
+   f. If `preview_apis:` is set in `.claude/tracking/architecture.md`
+      (decision made in Phase 1 step 3), read those preview headers now
+      and extract the exact names, structs, and method signatures needed
+      for implementation. The stable-vs-preview decision is already
+      settled — do not re-open it. Confirm that preview API use is
+      recorded in `.claude/tracking/limitations.md` and will appear in
+      the README Known Limitations section.
 
    **Extract and record** in `.claude/tracking/architecture.md`: result
    type constants, input/output struct names and field names, builder
