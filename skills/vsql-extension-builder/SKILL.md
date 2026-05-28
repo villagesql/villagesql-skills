@@ -607,13 +607,8 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
    Three concrete, specific items — not generic advice. Examples: "👍 issue
    #NNN to signal demand for aggregate function support," "run
    `perl mysql-test-run.pl --suite=mysql-test` after any code change,"
-   "open a GitHub Issue if you hit a bug." Tailor to what actually came
-   up during the session.
-
-   **Skill feedback** — Always include this line verbatim: "Share feedback
-   on the extension builder skill in #extensions at
-   https://discord.gg/KSr6whd3Fr — what worked, what was confusing, what
-   you had to redo."
+   "join discord.gg/KSr6whd3Fr to share feedback." Tailor to what
+   actually came up during the session.
 
 **Gate — all of the following must be true before presenting the Grand
 Finale:**
