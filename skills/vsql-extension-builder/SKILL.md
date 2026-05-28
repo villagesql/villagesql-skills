@@ -3,9 +3,10 @@ name: vsql-extension-builder
 description: >
   Build a VillageSQL extension end-to-end using the 7-phase persona-driven
   workflow: requirements, feasibility, scaffold, implementation, CTO review,
-  UAT, and documentation. Discovers the current VEF API from live SDK headers
-  during Phase 1 feasibility and Phase 2 bootstrap — no hardcoded API names.
-  Works from any directory.
+  UAT, and documentation. Supports C++ (default) and Rust implementations.
+  Discovers the current VEF API from live SDK sources during Phase 1
+  feasibility and Phase 2 bootstrap — no hardcoded API names. Works from
+  any directory.
 ---
 
 # VillageSQL Extension Builder
@@ -79,6 +80,24 @@ Gather through plain-text conversational questions (no UI selectors):
    feasibility gate. If the request seems ambitious or unusual, note the
    question and proceed.
 
+2. **Implementation language.** Ask: "C++ (default) or Rust?" Record
+   `language: cpp` or `language: rust` in the conversation — written to
+   `.claude/tracking/architecture.md` in Phase 2. If Rust, the repo name
+   uses the `-rx` suffix (e.g. `vsql-rot13-rx`). See
+   `references/rust-workflow.md` for Rust-specific steps in Phases 1–3
+   and 6; all other phases and gates apply unchanged.
+
+   **If Rust — pre-flight check:** Before proceeding, verify:
+   ```bash
+   cargo --version        # must be 1.87 or higher
+   cargo vsql --help      # confirms cargo-vsql is installed
+   ```
+   If `cargo` is missing: "Install Rust via https://rustup.rs (stable
+   toolchain, 1.87+), then re-run."
+   If `cargo vsql` is missing: "Run `cargo install cargo-vsql`, then
+   re-run."
+   Do not continue until both checks pass.
+
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
    "cube extension from Postgres") — or if it isn't clear — ask: "Is
@@ -87,7 +106,7 @@ Gather through plain-text conversational questions (no UI selectors):
    directory doesn't exist until Phase 2, so this is written to
    `.claude/tracking/architecture.md` then. This flag is read in Phase 1.
 
-2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
+3. **Paths:** Before asking, check these files in order for `BUILD_HOME`
    (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
    - `~/.villagesql/credentials.txt` — created by the installer; most
      authoritative source of paths and connection details
@@ -103,8 +122,8 @@ Gather through plain-text conversational questions (no UI selectors):
    - `source_dir` — VillageSQL source repository (only needed to read
      example extensions like `villagesql/examples/vsql-tvector/`).
 
-3. **Server connectivity:** Before asking, attempt to derive connection
-   details from the files checked in step 2, in the same order:
+4. **Server connectivity:** Before asking, attempt to derive connection
+   details from the files checked in step 3, in the same order:
    - `~/.villagesql/credentials.txt` — contains socket path, port, root
      password, and a ready-to-use connection command
    - `~/AGENTS.local.md` / `./AGENTS.local.md` — may contain socket or
@@ -124,7 +143,7 @@ Gather through plain-text conversational questions (no UI selectors):
    Record `villagesql_server_version` (the **session version**) and
    `veb_dir`.
 
-4. **Acceptance criteria** (draft in conversation; Phase 2 writes them to
+5. **Acceptance criteria** (draft in conversation; Phase 2 writes them to
    `.claude/tracking/acceptance_criteria.md` once the extension directory
    exists). Each criterion: `[N]. Given [context], [function] must
    [expected outcome].` Must include literal SQL values — untestable
@@ -145,10 +164,13 @@ and 2.
    doing anything else in Phase 1. The map must be complete before
    architecture decisions are made — functions discovered later cause
    expensive rework.
-2. **Locate and verify the SDK.** Before reading any header, locate the
-   staged SDK and verify its version. This must run before the
-   feasibility check — Phase 1 reads against this SDK only, never the
-   source tree or a stale tarball.
+2. **Locate and verify the SDK.** **If Rust:** follow
+   `references/rust-workflow.md → Phase 1: SDK Discovery & Feasibility`
+   instead of the steps below, then continue to step 3.
+
+   Before reading any header, locate the staged SDK and verify its
+   version. This must run before the feasibility check — Phase 1 reads
+   against this SDK only, never the source tree or a stale tarball.
 
    - Glob `{build_dir}/villagesql-extension-sdk-*/`. Filter to
      directories only (the build dir often also contains
@@ -169,10 +191,13 @@ and 2.
    Note the verified `sdk_dir` in the conversation — the tracking
    directory doesn't exist until Phase 2, so this is written to
    `.claude/tracking/architecture.md` then.
-3. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory
-   *from the verified SDK*, then also list and read any headers under
-   `preview/` within those same include roots. Answer the
-   header-discoverable questions in
+3. **Feasibility Check.** **If Rust:** follow
+   `references/rust-workflow.md → Phase 1: Feasibility` instead of
+   the steps below.
+
+   Read `vsql.h` and the `vsql/` subdirectory *from the verified SDK*,
+   then also list and read any headers under `preview/` within those same
+   include roots. Answer the header-discoverable questions in
    `references/capabilities.md`. Two probes (aggregate-function support,
    extension upgrade path) need a live install and run in Phase 3.
 
@@ -218,7 +243,12 @@ criteria revisions are settled.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
-1. **Create from Template.** Ask the user whether they want a GitHub repo
+1. **Create from Template.** **If Rust:** follow
+   `references/rust-workflow.md → Phase 2: Scaffold & API Bootstrap`
+   for steps 1 and 2 below, then continue to step 3 (Customize Scaffold)
+   with the Rust file structure in mind.
+
+   Ask the user whether they want a GitHub repo
    or a local-only scaffold. Three options:
    - **GitHub user** — create under the user's own account
    - **GitHub org** — create under an organization
@@ -349,8 +379,10 @@ function; Phase 4 will fail the run on any violation.
    comment is a paraphrase of an acceptance criterion, rewrite it as a
    behavior description ("Validation rejects uppercase prefix" — not
    "Criterion 5: uppercase prefix").
-3. Build, package, and install. When reinstalling via shell, run
-   `UNINSTALL` and `INSTALL` as **separate** `mysql -e` invocations.
+3. Build, package, and install. **If Rust:** use `cargo vsql install`
+   (see `references/rust-workflow.md → Phase 3: Build & Test Commands`).
+   When reinstalling via shell, run `UNINSTALL` and `INSTALL` as
+   **separate** `mysql -e` invocations.
    **After first install,** run the behavioral probes deferred from
    Phase 1 (aggregates, upgrade path — see `references/capabilities.md`)
    and record results in `.claude/tracking/limitations.md`. **Reconcile
@@ -358,7 +390,9 @@ function; Phase 4 will fail the run on any violation.
    to Phase 3" must now be confirmed (kept), downgraded (kept with
    weaker phrasing), or deleted. Only confirmed limitations may remain
    in the file at the end of Phase 3.
-4. Generate result files from actual output — never write by hand:
+4. Generate result files from actual output — never write by hand.
+   **If Rust:** `cargo vsql test --record` / `cargo vsql test`.
+   **If C++:**
    ```bash
    # Record:  perl mysql-test-run.pl --suite=/path/to/extension/mysql-test --record
    # Run:     perl mysql-test-run.pl --suite=/path/to/extension/mysql-test
@@ -484,7 +518,11 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
 
 ### Phase 6: Documentation & Cleanup *(Product Strategist)*
 
-1. **Generate `README.md` and `TESTING.md`.** Use the
+1. **Generate `README.md` and `TESTING.md`.** **If Rust:** use the
+   build and testing sections from `references/rust-workflow.md → Phase 6`
+   instead of the C++ cmake/make instructions below.
+
+   Use the
    [vsql-extension-template README](https://github.com/villagesql/vsql-extension-template/blob/main/README.md)
    as the structural reference for section order, OS-specific build
    instructions, and testing options — do not re-derive from scratch.
@@ -642,6 +680,7 @@ Detailed material lives in `references/`. Load on demand:
 | Implementation standards, data patterns, naming | `references/patterns.md` |
 | Build, test, paths, DDL syntax | `references/environment.md` |
 | Porting a PostgreSQL extension (type mapping, NULL semantics, operators, SRFs, charset) | `references/pg-port-guide.md` — load at Phase 1 step 1 when `pg_port: true` |
+| Rust SDK workflow (scaffold, API types, build/test commands, CTO adaptations) | `references/rust-workflow.md` — load at Phase 0 step 2 when `language: rust` |
 
 ---
 
