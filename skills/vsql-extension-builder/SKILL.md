@@ -4,7 +4,8 @@ description: >
   Build a VillageSQL extension end-to-end using the 7-phase persona-driven
   workflow: requirements, feasibility, scaffold, implementation, CTO review,
   UAT, and documentation. Discovers the current VEF API from live SDK headers
-  during Phase 2 bootstrap — no hardcoded API names. Works from any directory.
+  during Phase 1 feasibility and Phase 2 bootstrap — no hardcoded API names.
+  Works from any directory.
 ---
 
 # VillageSQL Extension Builder
@@ -81,10 +82,10 @@ Gather through plain-text conversational questions (no UI selectors):
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
    "cube extension from Postgres") — or if it isn't clear — ask: "Is
-   this a port of an existing PostgreSQL extension?" Record `pg_port:
-   true` and the source extension name in
-   `.claude/tracking/architecture.md` if yes. This flag is read in
-   Phase 1.
+   this a port of an existing PostgreSQL extension?" Note `pg_port: true`
+   and the source extension name in the conversation — the tracking
+   directory doesn't exist until Phase 2, so this is written to
+   `.claude/tracking/architecture.md` then. This flag is read in Phase 1.
 
 2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
    (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
@@ -165,11 +166,13 @@ and 2.
      If you find yourself reading a path containing `/abi/`, stop — you
      are in the wrong layer. Use only `vsql.h` and the `vsql/` subdir.
 
-   Record the verified `sdk_dir` in
-   `.claude/tracking/architecture.md`.
+   Note the verified `sdk_dir` in the conversation — the tracking
+   directory doesn't exist until Phase 2, so this is written to
+   `.claude/tracking/architecture.md` then.
 3. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory
    *from the verified SDK*, then also list and read any headers under
-   `preview/`. Answer the header-discoverable questions in
+   `preview/` within those same include roots. Answer the
+   header-discoverable questions in
    `references/capabilities.md`. Two probes (aggregate-function support,
    extension upgrade path) need a live install and run in Phase 3.
 
@@ -181,10 +184,13 @@ and 2.
      between VillageSQL releases
 
    If the user's request requires preview APIs to be fully realized, present
-   this trade-off now — before Phase 2 commits any scaffold. Record the
-   user's stable-vs-preview decision in `.claude/tracking/architecture.md`
-   under a `preview_apis:` key. Write confirmed constraints (for whichever
-   path the user chose) to `.claude/tracking/limitations.md` immediately.
+   this trade-off now — before Phase 2 commits any scaffold. Note the
+   user's stable-vs-preview decision in the conversation under a
+   `preview_apis:` key — the tracking directory doesn't exist until Phase 2,
+   so this is written to `.claude/tracking/architecture.md` then. Note
+   confirmed constraints (for whichever path the user chose) in the
+   conversation as well; they are written to `.claude/tracking/limitations.md`
+   at the start of Phase 2 step 3.
 4. **Function names.** Pick the SQL function names. Apply the conventions
    in `references/patterns.md` → Function Naming Conventions. Record in
    `.claude/tracking/architecture.md`.
@@ -199,9 +205,16 @@ session version), the stable-vs-preview decision (including trade-offs if
 preview APIs are involved), function names with rationale, and binary
 layout if applicable. This is the one phase where verbose conversation
 output is expected: the user should be able to review and push back before
-Phase 2 commits the scaffold. Save the same content to
-`.claude/tracking/architecture.md`. Proceed to Phase 2 only after the
-user has confirmed the approach.
+Phase 2 commits the scaffold.
+
+If feasibility findings narrowed or changed the scope from what the Phase 0
+description implied, explicitly flag which acceptance criteria from Phase 0
+are affected and ask the user to confirm or revise them before proceeding.
+Revised criteria replace the originals in the conversation draft —
+Phase 2 writes the final version to file.
+
+Proceed to Phase 2 only after the user has confirmed the approach and any
+criteria revisions are settled.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
@@ -272,7 +285,11 @@ user has confirmed the approach.
    template ships `LICENSE`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and
    others that must also be tailored. Specifically:
 
-   - Create `.claude/tracking/` in the extension directory
+   - Create `.claude/tracking/` in the extension directory. This is the
+     first moment the tracking directory exists — immediately write all
+     data noted in conversation during Phases 0 and 1 to their files:
+     `architecture.md` (pg_port flag, sdk_dir, preview_apis decision,
+     function names, design) and `limitations.md` (confirmed constraints).
    - Confirm `.gitignore` already covers `.claude/` (the template's
      does); if not, add it. The session scratchpads in
      `.claude/tracking/` must never be committed.
