@@ -87,6 +87,17 @@ Gather through plain-text conversational questions (no UI selectors):
    `references/rust-workflow.md` for Rust-specific steps in Phases 1–3
    and 6; all other phases and gates apply unchanged.
 
+   **If Rust — pre-flight check:** Before proceeding, verify:
+   ```bash
+   cargo --version        # must be 1.87 or higher
+   cargo vsql --help      # confirms cargo-vsql is installed
+   ```
+   If `cargo` is missing: "Install Rust via https://rustup.rs (stable
+   toolchain, 1.87+), then re-run."
+   If `cargo vsql` is missing: "Run `cargo install cargo-vsql`, then
+   re-run."
+   Do not continue until both checks pass.
+
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
    "cube extension from Postgres") — or if it isn't clear — ask: "Is
