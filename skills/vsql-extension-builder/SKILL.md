@@ -426,7 +426,10 @@ function; Phase 4 will fail the run on any violation.
    slop patterns — unnecessary defensiveness for conditions the VEF
    contract makes impossible, over-abstraction for a single caller,
    redundant comments that restate the code, empty catch blocks,
-   indirection layers that serve no purpose.
+   indirection layers that serve no purpose; (4) unnecessary C++ casts —
+   `static_cast` on a value already of the correct type, casting to the
+   same type twice, or `reinterpret_cast` where the typed API already
+   returns the right type.
 
    **Agent 2 — Quality:** Flag redundant state, parameter sprawl, copy-
    paste variation across functions, leaky abstractions, stringly-typed
@@ -664,6 +667,63 @@ Finale:**
 
 Do not present the Summary until every box above is checked. If any
 step was skipped, complete it now — do not ask the user whether to skip.
+
+### Post-gate: Skill Retrospective *(after Summary is presented)*
+
+After the gate passes and the summary is presented, do a single
+retrospective pass over the session's tracking files. This is
+machine-generated self-observation — not user feedback. The goal is
+to surface friction that points to specific skill instructions that
+could be clearer, tighter, or better specified.
+
+**What to look for** (read the tracking files; infer from evidence):
+
+- `cto_review.md` — how many fix cycles before PASS? Each cycle beyond
+  the first is friction. Note which checklist items failed and what
+  the deficiency was.
+- `simplification.md` — what was the ratio of findings to applied fixes
+  per agent? A high Agent 1 count suggests the skill's code generation
+  guidance is underspecified.
+- `limitations.md` — were any entries marked "deferred to Phase 3" and
+  then deleted (i.e., the concern was speculative)? Speculative
+  limitations indicate the Phase 1 feasibility probe is overcautious.
+  Conversely, were limitations discovered in Phase 3 that weren't
+  anticipated in Phase 1? That's a gap in `references/capabilities.md`.
+- `architecture.md` — did the preview_apis decision shift between Phase 1
+  and Phase 3? A shift means the Phase 1 trade-off framing was unclear.
+- Were any acceptance criteria amended in Phase 5 because they conflicted
+  with limitations? If the conflict was predictable from Phase 1 data,
+  the Phase 0 criteria drafting guidance needs tightening.
+- Did any phase re-enter more than once (gate fired, fix applied,
+  re-submitted)? Note which phase and the specific deficiency.
+
+**Format** — if friction was found, produce a structured note:
+
+```
+## Skill Retrospective — <extension-name>
+
+### Friction points
+
+- **<Phase N / Reference file>**: <what happened> → <specific instruction
+  or section that could be tightened>
+  Evidence: <tracking file + field>
+
+[repeat for each friction point]
+
+### Clean passes
+[any phase that ran without rework — one line each]
+```
+
+**If no friction points**: skip silently. Do not present the note or
+offer to file anything.
+
+**If friction points exist**: present the note inline (do not print
+tracking file contents — synthesize from them), then ask: "Want me to
+file this as an issue on villagesql-skills so it can improve future
+runs?" If yes, file to `villagesql/villagesql-skills` with title
+`[skill-feedback] <extension-name>: <one-line summary>` and the
+structured note as the body. If the MCP call fails (permissions),
+offer the note as copy-paste text instead.
 
 ---
 
