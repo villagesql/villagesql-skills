@@ -4,7 +4,8 @@ description: >
   Build a VillageSQL extension end-to-end using the 7-phase persona-driven
   workflow: requirements, feasibility, scaffold, implementation, CTO review,
   UAT, and documentation. Discovers the current VEF API from live SDK headers
-  during Phase 2 bootstrap — no hardcoded API names. Works from any directory.
+  during Phase 1 feasibility and Phase 2 bootstrap — no hardcoded API names.
+  Works from any directory.
 ---
 
 # VillageSQL Extension Builder
@@ -65,19 +66,26 @@ Gather through plain-text conversational questions (no UI selectors):
 
 1. **Extension description.** If `$ARGUMENTS` was provided, skip this.
    Otherwise ask — if vague, clarify before proceeding. Before recording
-   the description, evaluate whether the request is achievable as a VEF
-   extension. If it requires a MySQL plugin or server component, halt:
-   explain the distinction to the user and ask them to reframe the
-   request as a VEF extension, or acknowledge it is out of scope. Do
-   not proceed to Phase 1 until the request is confirmed achievable.
+   the description, apply a narrow scope check: halt only if the request
+   is clearly not a SQL extension at all — a GUI application, a standalone
+   binary unrelated to MySQL, an OS driver. Explain the VEF scope and ask
+   the user to reframe.
+
+   Do not make achievability judgments beyond this. Phase 0 has no SDK
+   access and cannot evaluate preview capabilities — any "this requires a
+   server component" call made here will be wrong when a preview API
+   (background threads, SQL sessions, sys vars, etc.) would enable it.
+   Phase 1 reads the SDK, including preview headers, and is the real
+   feasibility gate. If the request seems ambitious or unusual, note the
+   question and proceed.
 
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
    "cube extension from Postgres") — or if it isn't clear — ask: "Is
-   this a port of an existing PostgreSQL extension?" Record `pg_port:
-   true` and the source extension name in
-   `.claude/tracking/architecture.md` if yes. This flag is read in
-   Phase 1.
+   this a port of an existing PostgreSQL extension?" Note `pg_port: true`
+   and the source extension name in the conversation — the tracking
+   directory doesn't exist until Phase 2, so this is written to
+   `.claude/tracking/architecture.md` then. This flag is read in Phase 1.
 
 2. **Paths:** Before asking, check these files in order for `BUILD_HOME`
    (→ `build_dir`) and `SOURCE_HOME` (→ `source_dir`):
@@ -158,14 +166,31 @@ and 2.
      If you find yourself reading a path containing `/abi/`, stop — you
      are in the wrong layer. Use only `vsql.h` and the `vsql/` subdir.
 
-   Record the verified `sdk_dir` in
-   `.claude/tracking/architecture.md`.
+   Note the verified `sdk_dir` in the conversation — the tracking
+   directory doesn't exist until Phase 2, so this is written to
+   `.claude/tracking/architecture.md` then.
 3. **Feasibility Check.** Read `vsql.h` and the `vsql/` subdirectory
-   *from the verified SDK* and answer the header-discoverable questions
-   in `references/capabilities.md`. Two probes (aggregate-function
-   support, extension upgrade path) need a live install and run in
-   Phase 3. Write confirmed constraints to
-   `.claude/tracking/limitations.md` immediately.
+   *from the verified SDK*, then also list and read any headers under
+   `preview/` within those same include roots. Answer the
+   header-discoverable questions in
+   `references/capabilities.md`. Two probes (aggregate-function support,
+   extension upgrade path) need a live install and run in Phase 3.
+
+   Produce two findings:
+   - **Stable-only scope**: what the extension can do using only non-preview
+     headers
+   - **With preview APIs**: what additionally becomes possible, naming the
+     specific preview headers involved and stating that they may change
+     between VillageSQL releases
+
+   If the user's request requires preview APIs to be fully realized, present
+   this trade-off now — before Phase 2 commits any scaffold. Note the
+   user's stable-vs-preview decision in the conversation under a
+   `preview_apis:` key — the tracking directory doesn't exist until Phase 2,
+   so this is written to `.claude/tracking/architecture.md` then. Note
+   confirmed constraints (for whichever path the user chose) in the
+   conversation as well; they are written to `.claude/tracking/limitations.md`
+   at the start of Phase 2 step 3.
 4. **Function names.** Pick the SQL function names. Apply the conventions
    in `references/patterns.md` → Function Naming Conventions. Record in
    `.claude/tracking/architecture.md`.
@@ -176,12 +201,20 @@ and 2.
 
 **Gate:** Present the architecture summary in the conversation — SDK
 version (confirmed from `villagesql_config --version`, matching Phase 0
-session version), function names with rationale, and binary layout if
-applicable. This is the one phase where verbose conversation output is
-expected: the user should be able to review and push back before Phase 2
-commits the scaffold. Save the same content to
-`.claude/tracking/architecture.md`. Proceed to Phase 2 only after
-presenting the summary.
+session version), the stable-vs-preview decision (including trade-offs if
+preview APIs are involved), function names with rationale, and binary
+layout if applicable. This is the one phase where verbose conversation
+output is expected: the user should be able to review and push back before
+Phase 2 commits the scaffold.
+
+If feasibility findings narrowed or changed the scope from what the Phase 0
+description implied, explicitly flag which acceptance criteria from Phase 0
+are affected and ask the user to confirm or revise them before proceeding.
+Revised criteria replace the originals in the conversation draft —
+Phase 2 writes the final version to file.
+
+Proceed to Phase 2 only after the user has confirmed the approach and any
+criteria revisions are settled.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
@@ -233,15 +266,13 @@ presenting the summary.
       functions. Confirm by reading.
    e. Identify the file defining the input value struct and result
       struct. Confirm by reading — do not assume the filename.
-   f. Note headers under any `preview/` subdirectory. When a preview API
-      would enable a meaningfully better implementation — variable-length
-      storage, a richer type interface, etc. — present it as an option:
-      explain what it unlocks and that it is not in the stable SDK (may
-      change between VillageSQL releases). Let the user decide. If they
-      opt in, record the choice in `.claude/tracking/architecture.md`
-      under a `preview_apis:` key. Either way, note preview API use in
-      `.claude/tracking/limitations.md` and the README Known Limitations
-      section so users building against the extension know what to expect.
+   f. If `preview_apis:` is set in `.claude/tracking/architecture.md`
+      (decision made in Phase 1 step 3), read those preview headers now
+      and extract the exact names, structs, and method signatures needed
+      for implementation. The stable-vs-preview decision is already
+      settled — do not re-open it. Confirm that preview API use is
+      recorded in `.claude/tracking/limitations.md` and will appear in
+      the README Known Limitations section.
 
    **Extract and record** in `.claude/tracking/architecture.md`: result
    type constants, input/output struct names and field names, builder
@@ -254,7 +285,11 @@ presenting the summary.
    template ships `LICENSE`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and
    others that must also be tailored. Specifically:
 
-   - Create `.claude/tracking/` in the extension directory
+   - Create `.claude/tracking/` in the extension directory. This is the
+     first moment the tracking directory exists — immediately write all
+     data noted in conversation during Phases 0 and 1 to their files:
+     `architecture.md` (pg_port flag, sdk_dir, preview_apis decision,
+     function names, design) and `limitations.md` (confirmed constraints).
    - Confirm `.gitignore` already covers `.claude/` (the template's
      does); if not, add it. The session scratchpads in
      `.claude/tracking/` must never be committed.
@@ -309,12 +344,11 @@ function; Phase 4 will fail the run on any violation.
    conventions). **Test files are user-facing documentation**, not a log
    of how the skill thinks about the work. Write `.test` comments that
    describe the behavior being asserted to a future maintainer who has
-   never read this skill. Forbidden vocabulary in any committed `.test`
-   or `.result` file: `Criterion N`, `Phase N`, `Behavior probe`, `UAT`,
-   `acceptance_criteria`, `Persona`. If a comment is a paraphrase of an
-   acceptance criterion, rewrite it as a behavior description
-   ("Validation rejects uppercase prefix" — not "Criterion 5: uppercase
-   prefix").
+   never read this skill. Do not use any vocabulary from the forbidden
+   terms list in `references/cto-checklist.md` → Testing Integrity. If a
+   comment is a paraphrase of an acceptance criterion, rewrite it as a
+   behavior description ("Validation rejects uppercase prefix" — not
+   "Criterion 5: uppercase prefix").
 3. Build, package, and install. When reinstalling via shell, run
    `UNINSTALL` and `INSTALL` as **separate** `mysql -e` invocations.
    **After first install,** run the behavioral probes deferred from
@@ -619,8 +653,13 @@ on fresh invocations. Always resume from the last completed gate — do
 not restart from Phase 0.
 
 1. Re-read this skill file in full and `references/philosophy.md`.
-2. List `.claude/tracking/` and read every file present.
-3. Determine the last completed phase using the file inventory:
+2. Check whether an extension directory exists in the current working
+   directory. If no extension directory and no `.claude/tracking/` files
+   can be found, there is nothing to resume — fall back to the Fresh
+   Start Rule and begin at Phase 0. Do not attempt to reconstruct state
+   from conversation alone.
+3. List `.claude/tracking/` and read every file present.
+4. Determine the last completed phase using the file inventory:
    - `acceptance_criteria.md` → Phase 0 drafted; written by Phase 2
    - `architecture.md` (with feasibility + binary layout if applicable)
      → Phases 1–2 complete
@@ -628,7 +667,7 @@ not restart from Phase 0.
      complete
    - `simplification.md` → Phase 3 step 6 complete
    - `cto_review.md` → Phase 4 complete
-4. **Validate state against artifacts.** Run `mysql-test-run.pl`
+5. **Validate state against artifacts.** Run `mysql-test-run.pl`
    against the suite and check whether the extension is installed.
    Cross-check results against the artifact-determined phase:
    - If artifacts say Phase 3+ complete but tests fail: assume
@@ -641,6 +680,6 @@ not restart from Phase 0.
      `limitations.md`, and scaffold exists but tests have never run):
      treat as start of Phase 3 and confirm with the user.
    - If artifacts and working tree agree, proceed.
-5. Announce the determined phase and working tree state to the user.
+6. Announce the determined phase and working tree state to the user.
    If there is any ambiguity or mismatch, ask for explicit confirmation
    before proceeding — do not assume.
