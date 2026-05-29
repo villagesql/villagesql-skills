@@ -63,3 +63,9 @@ the first time, and record results in `.claude/tracking/limitations.md`.
 - **Extension upgrade path.** Test `ALTER EXTENSION` or equivalent. If it
   doesn't exist, type changes require `UNINSTALL` + `INSTALL` — document
   for users.
+
+- **REAL-returning functions with integer input.** If the extension includes
+  a `.returns(REAL)` function, test it with an INT column and inspect the
+  result type via `DESCRIBE`. If it shows INT rather than DOUBLE, document
+  the `CAST(col AS DOUBLE)` or `col * 1.0` workaround, record the limitation,
+  and link [villagesql-server#608](https://github.com/villagesql/villagesql-server/issues/608).
