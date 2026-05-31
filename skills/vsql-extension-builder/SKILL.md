@@ -82,8 +82,7 @@ Gather through plain-text conversational questions (no UI selectors):
 
 2. **Implementation language.** Ask: "C++ (default) or Rust?" Record
    `language: cpp` or `language: rust` in the conversation — written to
-   `.claude/tracking/architecture.md` in Phase 2. If Rust, the repo name
-   uses the `-rx` suffix (e.g. `vsql-rot13-rx`). See
+   `.claude/tracking/architecture.md` in Phase 2. See
    `references/rust-workflow.md` for Rust-specific steps in Phases 1–3
    and 6; all other phases and gates apply unchanged.
 
