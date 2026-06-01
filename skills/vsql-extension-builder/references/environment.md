@@ -33,9 +33,12 @@ VillageSQL extensions. Never `test/`.
 
 ## Run MTR from `{build_dir}/mysql-test`
 
-MTR **must be invoked with `{build_dir}/mysql-test` as the working directory.**
-Running from any other directory fails with a Perl module path error
-(`Can't locate My/ConfigFactory.pm in @INC`).
+Run MTR from `{build_dir}/mysql-test/`. For **prebuilt installs**
+(`~/.villagesql/prebuilt/`), this is required — the script uses relative
+`@INC` paths that only resolve from within that directory, and running from
+anywhere else fails with `Can't locate My/ConfigFactory.pm`. For dev builds,
+a wrapper script handles the `chdir` automatically, so working directory
+doesn't matter.
 
 ```bash
 cd {build_dir}/mysql-test
@@ -43,7 +46,7 @@ perl mysql-test-run.pl --suite=/absolute/path/to/extension-name/mysql-test
 perl mysql-test-run.pl --suite=/absolute/path/to/extension-name/mysql-test --record
 ```
 
-The `--suite` path must be absolute. A relative path will resolve against
+The `--suite` path must be absolute. A relative path resolves against
 `{build_dir}/mysql-test/`, not the extension directory.
 
 ## MTR test file syntax
