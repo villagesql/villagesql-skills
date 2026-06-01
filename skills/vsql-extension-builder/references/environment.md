@@ -2,11 +2,15 @@
 
 ## Build workflow
 
+`build.sh` **must be run from the repo root** — the directory that contains
+`CMakeLists.txt`. Running it from a subdirectory will fail with "No such
+file or directory."
+
 ```bash
 export VillageSQL_BUILD_DIR=/path/to/villagesql/build
-cd extension-name/
-./build.sh                # Produces build/<extension_name>.veb
-cd build && make install  # Copies .veb to VEB directory
+cd extension-name/           # repo root — contains CMakeLists.txt
+./build.sh                   # Produces build/<extension_name>.veb
+cd build && make install     # Copies .veb to VEB directory
 mysql -u root -e "INSTALL EXTENSION <extension_name>;"
 ```
 
@@ -29,10 +33,18 @@ VillageSQL extensions. Never `test/`.
 
 ## Run MTR from `{build_dir}/mysql-test`
 
+MTR **must be invoked with `{build_dir}/mysql-test` as the working directory.**
+Running from any other directory fails with a Perl module path error
+(`Can't locate My/ConfigFactory.pm in @INC`).
+
 ```bash
-perl mysql-test-run.pl --suite=/path/to/extension-name/mysql-test
-perl mysql-test-run.pl --suite=/path/to/extension-name/mysql-test --record
+cd {build_dir}/mysql-test
+perl mysql-test-run.pl --suite=/absolute/path/to/extension-name/mysql-test
+perl mysql-test-run.pl --suite=/absolute/path/to/extension-name/mysql-test --record
 ```
+
+The `--suite` path must be absolute. A relative path will resolve against
+`{build_dir}/mysql-test/`, not the extension directory.
 
 ## MTR test file syntax
 
