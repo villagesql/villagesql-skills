@@ -391,10 +391,11 @@ function; Phase 4 will fail the run on any violation.
    in the file at the end of Phase 3.
 4. Generate result files from actual output — never write by hand.
    **If Rust:** `cargo vsql test --record` / `cargo vsql test`.
-   **If C++:**
+   **If C++** (must run from `{build_dir}/mysql-test/` — any other directory
+   fails with a Perl module path error):
    ```bash
-   # Record:  perl mysql-test-run.pl --suite=/path/to/extension/mysql-test --record
-   # Run:     perl mysql-test-run.pl --suite=/path/to/extension/mysql-test
+   # Record:  perl mysql-test-run.pl --suite=/absolute/path/to/extension/mysql-test --record
+   # Run:     perl mysql-test-run.pl --suite=/absolute/path/to/extension/mysql-test
    ```
 5. **CRITICAL:** Show test runner output after every run. NEVER claim
    a test passes without evidence. Output rules:
