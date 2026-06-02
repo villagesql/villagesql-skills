@@ -342,6 +342,9 @@ criteria revisions are settled.
    - Update `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` so they describe this
      extension, not the template. These onboard future agents and must
      not ship as template boilerplate.
+   - Update `.github/workflows/ci.yml`: change `extension-name: vsql_extension_template`
+     to `extension-name: <extension_name>` (underscore form). This is easy to miss and
+     causes CI to build the wrong extension silently.
    - Confirm `LICENSE` is present and unchanged (GPL-2.0 from template)
    - Clear the hello-world implementation in `src/`, keeping the entry
      point structure
@@ -545,7 +548,11 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
      before/after SQL for common use cases, behavioral differences, and
      every Blocked function with its workaround)
    - Known Limitations (assembled in step 2 below)
+   - Security Considerations (if the extension handles credentials, secrets,
+     network access, or user-supplied data — cover threat model and mitigations;
+     omit for pure computational extensions like math or string manipulation)
    - Testing (point to `TESTING.md`)
+   - Contributing (one-line link: `See the [VillageSQL Contributing Guide](https://github.com/villagesql/villagesql-server/blob/main/CONTRIBUTING.md).`)
    - Reporting Bugs and Requesting Features (GitHub Issues link)
    - Contact (Discord `https://discord.gg/KSr6whd3Fr` + GitHub Issues)
    - License
