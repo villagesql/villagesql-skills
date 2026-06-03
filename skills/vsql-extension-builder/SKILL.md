@@ -50,7 +50,8 @@ it active. Tracking files are the record; the conversation is the signal.
 ## Persona Overview
 
 | Persona | Phase(s) | Focus | Failure Mode |
-|---|---|---|---|
+|---|---|---|
+---|
 | Product Strategist | 0, 6 | Requirements and acceptance criteria | Writing criteria that are vague, untestable, or reference functions that don't exist yet — clarify before recording |
 | Architect | 1, 2 | Feasibility, design, scaffold | Scaffolding before API signature verification; writing plausible-sounding names without reading headers |
 | Team Lead | 3 | Incremental build-test loop | Reporting success without showing actual test output; applying simplification fixes without re-running tests |
@@ -238,7 +239,8 @@ Revised criteria replace the originals in the conversation draft —
 Phase 2 writes the final version to file.
 
 Proceed to Phase 2 only after the user has confirmed the approach and any
-criteria revisions are settled.
+criteria revisions are settled. Note: matching confirmed limitations to
+server-side tracking issues happens in Phase 6.
 
 ### Phase 2: Template & Scaffold *(Architect, continued)*
 
