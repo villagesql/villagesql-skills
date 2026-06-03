@@ -319,6 +319,13 @@ criteria revisions are settled.
      data noted in conversation during Phases 0 and 1 to their files:
      `architecture.md` (pg_port flag, sdk_dir, preview_apis decision,
      function names, design) and `limitations.md` (confirmed constraints).
+     Each `limitations.md` entry must include the constraint, any
+     workaround used, and two search term fields captured while the
+     implementation context is fresh:
+     - `search_terms.technical:` — implementation-level terms (e.g.
+       "arena allocator destructor hook")
+     - `search_terms.user_facing:` — how a user would describe the
+       missing capability (e.g. "custom type cleanup on drop")
    - Confirm `.gitignore` already covers `.claude/` (the template's
      does); if not, add it. The session scratchpads in
      `.claude/tracking/` must never be committed.
@@ -387,7 +394,9 @@ function; Phase 4 will fail the run on any violation.
    **separate** `mysql -e` invocations.
    **After first install,** run the behavioral probes deferred from
    Phase 1 (aggregates, upgrade path — see `references/capabilities.md`)
-   and record results in `.claude/tracking/limitations.md`. **Reconcile
+   and record results in `.claude/tracking/limitations.md`. Use the same
+   entry format established in Phase 2 step 3: constraint, workaround,
+   `search_terms.technical`, and `search_terms.user_facing`. **Reconcile
    speculative limitations:** any entry written in Phase 1 as "deferred
    to Phase 3" must now be confirmed (kept), downgraded (kept with
    weaker phrasing), or deleted. Only confirmed limitations may remain
@@ -571,24 +580,41 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
    workarounds. If `limitations.md` is missing but workarounds were
    used, reconstruct from `architecture.md` before proceeding.
 
-3. **Call to Action.** For each limitation, run a targeted search
-   against villagesql-server issues using `mcp__github__search_issues`.
-   Log the search query string used. If a matching issue exists, verify
-   relevance by checking the issue title — log the issue number and
-   title, link it in the README, and ask the user to 👍 it. A generic
-   hit (e.g. issue #1 "repo setup") is not a match; keep searching or
-   treat as no match. If no relevant issue exists, write a complete,
-   copy-paste-ready draft inline — title, description, and relevant
-   context — then ask the user: "Want me to file this, or will you copy
-   it?" If the agent files the issue, the title must include
-   `[extension-builder]` and the body must open with:
-   > *Surfaced by the VillageSQL Extension Builder skill while building
-   > `<extension-name>`.*
+3. **Call to Action.** For each limitation in `limitations.md`:
 
-   **Gate:** For every entry in `limitations.md`, record here: the
-   search query used, the matching issue number + title (or "no match"),
-   and the outcome (linked / drafted / user prompted). Phase 6 is not
-   complete until all entries are accounted for.
+   a. **Keyword search.** Run two queries against villagesql-server using
+      `mcp__github__search_issues` — one using `search_terms.technical`,
+      one using `search_terms.user_facing`. Log both query strings.
+
+   b. **Inspect every hit.** For each result returned, call
+      `mcp__github__issue_read` to read the full issue body. A match
+      requires the issue to describe the same underlying gap — not just
+      share keywords. Log the issue number, title, and one sentence
+      explaining why it matches or doesn't. Title-only matching is not
+      acceptable.
+
+   c. **Fallback — reason over the full issue list.** If both queries
+      return no hits, or all hits fail inspection, fetch the full list
+      of open villagesql-server issues using `mcp__github__list_issues`
+      (paginate as needed) and reason over them semantically. Fetch this
+      list once and reuse it for all remaining limitations in the same
+      pass — do not re-fetch per limitation.
+
+   d. **Outcome.** For each limitation, record one of:
+      - **Match found:** link the issue in the README and ask the user
+        to 👍 it.
+      - **No match:** write a complete, copy-paste-ready draft inline —
+        title, description, relevant context — then ask: "Want me to
+        file this, or will you copy it?" If filing, use the repo's
+        existing issue templates and open the body with:
+        > *Surfaced by the VillageSQL Extension Builder skill while
+        > building `<extension-name>`.*
+
+   **Gate:** For every entry in `limitations.md`, record: both search
+   queries used, all hits inspected with pass/fail reasoning, whether
+   fallback reasoning was invoked, and the outcome (linked / drafted /
+   user prompted). Phase 6 is not complete until all entries are
+   accounted for.
 
 4. **Announce the extension.** Write a complete, copy-paste-ready
    **Feature** issue draft for
@@ -662,9 +688,9 @@ Finale:**
   and cross-checked against actual files in `mysql-test/t/`
 - [ ] Step 2: "Known Limitations" section in `README.md` assembled from
   `limitations.md`; if `limitations.md` was missing, reconstructed first
-- [ ] Step 3: Every `limitations.md` entry has a search query logged, a
-  match outcome (issue # + title or "no match"), and a result (linked /
-  drafted / user prompted)
+- [ ] Step 3: Every `limitations.md` entry has both search queries logged,
+  all hits inspected (not just title-checked), fallback reasoning invoked
+  if needed, and outcome recorded (linked / drafted / user prompted)
 - [ ] Step 4: Extension announcement Feature issue drafted and user prompted
 - [ ] Step 5: Vocabulary grep clean — zero hits for forbidden terms across
   all committed files
