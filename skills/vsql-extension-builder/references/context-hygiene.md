@@ -27,3 +27,15 @@ and keep active for the duration of the session.
   have run, save current state to tracking files before continuing. The
   resume protocol reconstructs from tracking files — keeping them
   current reduces the cost of any compaction.
+- **Never write credentials into files the skill creates or commits.**
+  `~/.villagesql/credentials.txt`, `~/.my.cnf`, and `AGENTS.local.md`
+  contain a root password and connection details. Reference them by
+  path; never paste their contents into the conversation, into
+  `.claude/tracking/*.md`, or into any file the skill generates
+  (`README.md`, `TESTING.md`, manifest examples, test scripts). In
+  shell commands and generated examples, connect via socket
+  (`mysql -S /tmp/mysql.sock -u root`) or `--defaults-file=~/.my.cnf`
+  — never `mysql -u root -p<password>`, which lands in shell history
+  and `ps` output. If a generated doc needs a connection example, use
+  a placeholder (`mysql -u root -p`) and let the reader supply the
+  password interactively.
