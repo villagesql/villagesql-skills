@@ -41,11 +41,20 @@ These define what the Rust SDK can express today.
 
 **Available in the Rust SDK (stable):**
 - VDF functions: scalar functions over `&[InValue]` → `VdfReturn`
+- Zero-argument VDFs (e.g. `currency_count()`) work; pass `[]` for params
+  in `func!`
 - Custom types: fixed-length binary storage via `custom_type!` (encode,
   decode, compare, hash)
 - Null handling: `InValue::Null` variant and `VdfReturn::null()`
 - Error and warning returns: `VdfReturn::Error(String)` and
   `VdfReturn::Warning(String)`
+
+**Known behaviors that constrain design** (see
+`references/capabilities.md` → "STRING return size and charset"):
+- STRING returns are capped at 256 bytes. Designing a 0-arg "return all
+  rows as JSON" function will hit this — chunk or prefix-filter instead.
+- STRING results carry the `binary` charset; callers consuming results
+  via MySQL JSON functions need `CONVERT(... USING utf8mb4)`.
 
 **Not yet available in the Rust SDK:**
 - Aggregate functions
@@ -106,6 +115,19 @@ to `.claude/tracking/` as specified in Phase 2 step 3 of the main skill.
 the canonical minimal starting point for a string VDF. `vsql_rational` is
 the canonical starting point for a custom type. Read the relevant example
 before writing any implementation code.
+
+**`custom_type!` intrinsic default.** Every custom type needs an encodable
+intrinsic default. With no `default:` set, the server encodes the empty
+string `''` at `CREATE TABLE` and type initialization fails with:
+
+```
+Type 'X.Y' failed to initialize: from_string VDF failed to encode intrinsic default input ''
+```
+
+Either set `default:` to a value your `encode` accepts, or ensure
+`encode("")` succeeds. The
+[vsql-uuid](https://github.com/villagesql/vsql-uuid) nil-UUID default
+is the canonical pattern for choosing a value.
 
 **File structure for a VDF-only extension:**
 ```
