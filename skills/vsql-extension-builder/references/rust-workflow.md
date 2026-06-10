@@ -9,13 +9,15 @@ acceptance criteria, UAT) apply unchanged.
 
 | Context | Form | Example |
 |---|---|---|
-| Repo / directory name | `vsql-<name>-rx` | `vsql-rot13-rx` |
-| Cargo package name | `vsql_<name>_rx` | `vsql_rot13_rx` |
-| SQL install name | matches `name` in `manifest.json` | `vsql_rot13_rx` |
-| VEB output file | `dist/<cargo-package-name>.veb` | `dist/vsql_rot13_rx.veb` |
+| Repo / directory name | `vsql-<name>` | `vsql-rot13` |
+| Cargo package name | `vsql_<name>` | `vsql_rot13` |
+| SQL install name | matches `name` in `manifest.json` | `vsql_rot13` |
+| VEB output file | `dist/<cargo-package-name>.veb` | `dist/vsql_rot13.veb` |
 
-The `-rx` suffix marks the repo as a Rust extension. Use it consistently
-in the directory name, Cargo package name, and manifest name.
+Rust extensions use the same naming as C++ extensions — the language
+is recorded in `Cargo.toml` and `manifest.json`, not in the repo name.
+Match the convention used by the reference examples in `vsql-rust-sdk`
+(`vsql_rot13`, `vsql_rational`).
 
 ## Phase 1: SDK Discovery & Feasibility
 
@@ -63,14 +65,14 @@ silently drops the capability — the user must confirm the reduced scope.
 No template repo exists for Rust extensions. Scaffold manually:
 
 ```bash
-cargo new --lib vsql-<name>-rx
-cd vsql-<name>-rx
+cargo new --lib vsql-<name>
+cd vsql-<name>
 ```
 
 Configure `Cargo.toml`:
 ```toml
 [package]
-name = "vsql_<name>_rx"
+name = "vsql_<name>"
 version = "0.0.1"
 edition = "2021"
 
@@ -84,7 +86,7 @@ villagesql = "<crate-version-from-sdk-discovery>"
 Create `manifest.json` next to `Cargo.toml`:
 ```json
 {
-  "name": "vsql_<name>_rx",
+  "name": "vsql_<name>",
   "version": "0.0.1",
   "description": "<one-line description>",
   "author": "<author>",
@@ -109,7 +111,7 @@ before writing any implementation code.
 
 **File structure for a VDF-only extension:**
 ```
-vsql-<name>-rx/
+vsql-<name>/
 ├── Cargo.toml
 ├── Cargo.lock
 ├── manifest.json
