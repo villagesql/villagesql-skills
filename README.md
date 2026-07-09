@@ -1,7 +1,7 @@
 # villagesql-skills
 
 Agent skills for working with [VillageSQL](https://villagesql.com). Skills run
-in Claude Code, Gemini CLI, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
+in Claude Code, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
 
 ## Skills
 
@@ -20,7 +20,7 @@ curl -sSL https://villagesql.com/skills | bash
 ```
 
 Detects which agents are installed and configures each one. Supports Claude
-Code, Gemini CLI, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
+Code, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
 Re-running updates in place.
 
 Override locations with env vars:
@@ -43,16 +43,6 @@ ln -s ~/code/villagesql-skills/skills/vsql-extension-builder ~/.claude/skills/vs
 
 Verify the skill is loaded by typing `/` in Claude Code — the skill name
 should appear in the slash command list.
-
-#### Gemini CLI
-
-```bash
-git clone https://github.com/villagesql/villagesql-skills.git ~/code/villagesql-skills
-mkdir -p ~/.gemini/extensions
-ln -s ~/code/villagesql-skills ~/.gemini/extensions/villagesql
-```
-
-Gemini CLI reads `gemini-extension.json` and loads `GEMINI.md` as context.
 
 #### agy
 
