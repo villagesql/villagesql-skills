@@ -1,12 +1,13 @@
 # VillageSQL Project Context
 
-VillageSQL is a MySQL tracking fork with the VillageSQL Extension Framework (VEF) —
-a system for building custom SQL functions and types without modifying server code.
+VillageSQL is a drop-in replacement for MySQL with extensions. The
+VillageSQL Extension Framework (VEF) is a system for building custom SQL
+functions and types without modifying server code.
 Extensions are packaged as `.veb` files and installed at runtime.
 
 Key public repos:
-- [villagesql-server](https://github.com/villagesql/villagesql-server) — core
-  MySQL fork with VEF; releases ship prebuilt binaries and the extension SDK
+- [villagesql-server](https://github.com/villagesql/villagesql-server) — the
+  core server with VEF; releases ship prebuilt binaries and the extension SDK
 - [vsql-extension-template](https://github.com/villagesql/vsql-extension-template)
   — the template every new C++ extension starts from
 - [vsql-rust-sdk](https://github.com/villagesql/vsql-rust-sdk) — Rust SDK and
