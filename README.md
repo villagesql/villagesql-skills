@@ -11,6 +11,19 @@ in Claude Code, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
 
 More skills will be added here over time.
 
+## Prerequisites
+
+The skills drive a live VillageSQL server on your machine. Install one as a
+prebuilt binary or a source build via the server installer:
+
+```bash
+curl -fsSL https://install.villagesql.com | bash
+```
+
+A Docker install is not sufficient for `vsql-extension-builder` — building
+and testing extensions needs the extension SDK, server binaries, and test
+runner on the host. See each skill's README for its full requirements.
+
 ## Installing
 
 ### Quick install
@@ -126,9 +139,8 @@ ln -s ~/code/villagesql-skills/skills/vsql-extension-builder ~/.claude/skills/vs
 Branch switches are then live immediately. When you're done, re-running the
 quick installer restores the managed copy.
 
-If you add a new file to `references/`, also update the install script in
-`villagesql-website/src/skills` so it gets included for users of the quick
-installer.
+If you add a new file to `references/`, call it out in your PR description —
+a maintainer will update the quick-install script to include it.
 
 ## License
 
