@@ -18,7 +18,7 @@ machine-specific overrides.
 
 - Summary line ≤41 characters, imperative mood, no period
 - Body lines ≤72 characters, explain WHY not WHAT
-- End with `AI=GEMINI` and `Co-Authored-By: Gemini <noreply@google.com>`
+- End with your agent's `AI=<TOOL>` and `Co-Authored-By:` attribution line
 - Run `villint.sh` before committing server code
 - Never push directly to `main`; never create PRs (stop at push)
 
