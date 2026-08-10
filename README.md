@@ -7,6 +7,7 @@ in Claude Code, agy, Codex, Cursor, Amp, Kiro, OpenCode, and OpenClaw.
 
 | Skill | What it does |
 |---|---|
+| [`vsql-install-server`](skills/vsql-install-server/) | Gets a working VillageSQL server on your machine — install, start, connect, load an extension, verify. Start here if you do not have a server yet. |
 | [`vsql-extension-builder`](skills/vsql-extension-builder/) | Builds a VillageSQL extension end-to-end through a 7-phase persona-driven workflow. Discovers the current VEF API from live SDK headers — no hardcoded API names. |
 
 More skills will be added here over time.
@@ -20,9 +21,12 @@ prebuilt binary or a source build via the server installer:
 curl -fsSL https://install.villagesql.com | bash
 ```
 
-A Docker install is not sufficient for `vsql-extension-builder` — building
-and testing extensions needs the extension SDK, server binaries, and test
-runner on the host. See each skill's README for its full requirements.
+The `villagesql/server` Docker image carries the extension SDK, a C++
+toolchain, and a `vsql-build-extension.sh` helper, so you can build and
+install an extension inside a container. What it does not carry is
+`mysql-test-run.pl`, the MTR orchestrator, so `vsql-extension-builder` cannot
+complete its test phase there — that phase needs an installer or source build
+on the host. See each skill's README for its full requirements.
 
 ## Installing
 

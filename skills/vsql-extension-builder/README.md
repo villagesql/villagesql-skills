@@ -21,10 +21,17 @@ the same machine:
   curl -fsSL https://install.villagesql.com | bash
   ```
 
-  See the [documentation](https://villagesql.com/docs) for details. A
-  Docker install is **not** sufficient — the skill needs the extension
-  SDK, server binaries, and MTR test runner on the host, none of which a
-  container install provides.
+  See the [documentation](https://villagesql.com/docs) for details. If you
+  do not have a server yet, run the
+  [`vsql-install-server`](../vsql-install-server/) skill first.
+
+  A Docker install gets you **most** of the way but not all of it. The
+  `villagesql/server` image ships the extension SDK, its CMake package, a
+  C++ toolchain, and a `vsql-build-extension.sh` helper, so the skill's
+  build and manual-verification phases work inside a container. The image
+  ships `mysqltest` but not `mysql-test-run.pl`, so a single test file can be
+  run by hand while the skill's `--suite=` test phase cannot. For the full
+  workflow, use an installer or source build on the host.
 
 - **For Rust extensions:** `cargo` 1.87+ and `cargo-vsql`. The skill
   verifies both before starting.
