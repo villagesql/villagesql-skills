@@ -32,16 +32,34 @@ VSQL_SOCKET=/tmp/mysql.sock  # host paths only; replace with the real socket
 Every `docker` command below uses `"$VSQL_CONTAINER"`. If you name the
 container something else, nothing needs re-editing.
 
-Decide the client invocation once, too, because it depends on which password
-option you pick in Step 2. Empty-password setups use `mysql -u root`; every
-other setup needs a password on **every** later command. Pick one:
+Decide the client invocation once, too. It has two parts: where the client
+binary is, and whether a password is needed.
+
+An installer build does **not** put the client on `PATH`, so a bare `mysql`
+gives `mysql: command not found`. Take the path from `credentials.txt`:
 
 ```bash
-MYSQL="mysql -u root"                       # empty-password install
-MYSQL="mysql -u root -p<password>"          # password install
+VSQL_CLIENT="$HOME/.villagesql/prebuilt/bin/mysql"  # installer build
+VSQL_CLIENT=mysql                                   # Docker, or a client already on PATH
 ```
 
-For Docker, prefix with the exec: `docker exec "$VSQL_CONTAINER" $MYSQL`.
+Every host client call below is written as `"$VSQL_CLIENT" -u root`; the
+Docker ones call `mysql` inside the image, where it is always on `PATH`. If
+your setup has a root password, add `-p<password>` to **every** one of them;
+an empty-password setup needs nothing extra. The client then prints
+`[Warning] Using a password on the command line interface can be insecure.`
+on stderr — that warning is not output from your statement.
+
+Keep the client *path* in that variable, never a whole command. zsh — the
+default shell on macOS — does not word-split an unquoted expansion, so a
+variable holding `mysql -u root` is passed as a single argument:
+`exec: "mysql -u root": executable file not found in $PATH`.
+
+For Docker, prefix the call with the exec:
+`docker exec "$VSQL_CONTAINER" "$VSQL_CLIENT" -u root`.
+
+Error messages are quoted below as the server sends them. `mysql -e` appends
+` at line 1`, so a real line reads `ERROR 1064 (42000) at line 1: ...`.
 
 ## Step 0 — Is a server already running?
 
@@ -61,15 +79,25 @@ defaults. On macOS `pgrep -a` does not print arguments; use `ps`:
 ps -o command= -p <PID>
 ```
 
-Take the `--socket` and `--port` values from that output and use them for
-every later connection. Do not assume `/tmp/mysql.sock`. A machine can have
-a source build, an installer build, and a Homebrew MySQL all present, and
-the socket is the only reliable way to reach the one that is actually up.
+`[mysqld] <defunct>` means a dead process nobody reaped, not a server.
+
+From the command line it prints, take the `--socket` and `--port` values, and
+the binary's own path — that directory holds the matching client, so set both
+variables from what you just read:
+
+```bash
+VSQL_SOCKET=<the --socket value>
+VSQL_CLIENT=<dir of the mysqld path>/mysql
+```
+
+Do not assume `/tmp/mysql.sock`. A machine can have a source build, an
+installer build, and a Homebrew MySQL all present, and the socket is the only
+reliable way to reach the one that is actually up.
 
 Confirm which server you reached before doing anything else:
 
 ```bash
-mysql -u root --socket="$VSQL_SOCKET" -e "SELECT VERSION();"
+"$VSQL_CLIENT" -u root --socket="$VSQL_SOCKET" -e "SELECT VERSION();"
 ```
 
 A VillageSQL server reports a version like `8.4.10-villagesql-0.0.6`. If the
@@ -96,6 +124,18 @@ recommend the installer. Details in Step 6.
 
 ### Installer
 
+On a minimal Linux image, install the prerequisites before anything else. The
+installer does not install them:
+
+```bash
+apt-get update && apt-get install -y curl ca-certificates libaio1t64 libnuma1
+```
+
+`curl` and `ca-certificates` are needed to fetch the script at all — without
+them the command below fails with `curl: command not found`. `libaio1t64` and
+`libnuma1` are needed by the prebuilt `mysqld` binary. A normal desktop
+usually has all four; a bare `ubuntu:24.04` has none of them.
+
 The published one-liner is **interactive** and aborts under any
 non-interactive shell — which includes every agent, CI job, and
 `docker exec`. It exits with:
@@ -104,6 +144,7 @@ non-interactive shell — which includes every agent, CI job, and
 Error: This installer is interactive and requires a terminal.
 Re-run it from an interactive shell, or run non-interactively with:
   INSTALL_METHOD=docker|prebuilt|source   (required)
+  VSQL_VERSION=stable|nightly|latest      (required for source builds)
 ```
 
 So always set `INSTALL_METHOD` yourself:
@@ -114,17 +155,6 @@ curl -fsSL https://install.villagesql.com | INSTALL_METHOD=prebuilt bash
 
 `prebuilt` downloads a binary release, `source` builds from source, `docker`
 delegates to the Docker path. Use `prebuilt` unless told otherwise.
-
-On a minimal Linux image, install the prerequisites first. The installer does
-not install them and does not check for them:
-
-```bash
-apt-get update && apt-get install -y curl ca-certificates libaio1t64 libnuma1
-```
-
-`curl` and `ca-certificates` are needed to fetch the script at all.
-`libaio1t64` and `libnuma1` are needed by the prebuilt `mysqld` binary — a
-normal desktop usually has them, a bare `ubuntu:24.04` does not.
 
 **Do not trust the completion banner.** The installer can print
 `✓ Installation Complete!` with a generated root password after database
@@ -148,14 +178,28 @@ failed — install the missing libraries above and re-initialize:
 A successful install writes `~/.villagesql/credentials.txt`. Read it — do not
 guess paths. It records the install dir, build dir, data dir, port, socket,
 log path, the generated root password, and start/connect/stop commands for
-this machine, plus the `villagesql` and `villagesql-server` shortcuts.
+this machine. The `villagesql` / `villagesql-server` shortcuts it lists exist
+only if `~/.local/bin` already did.
 
 ```bash
 cat ~/.villagesql/credentials.txt
 ```
 
+Set the two variables from what that file says, rather than from the defaults
+at the top of this page — the socket is not `/tmp/mysql.sock` here:
+
+```bash
+VSQL_SOCKET=<the Socket: line>
+VSQL_CLIENT=<the MySQL Client: line under Direct Paths>
+```
+
 That file contains a password. Do not echo it into a shared transcript, a
-commit, or a bug report.
+commit, or a bug report — note that the installer has already printed it to
+stdout twice by this point, so a saved transcript of the install needs the
+same care.
+
+**Do not trust that password until you have used it.** Step 3 covers this,
+because the check needs a running server.
 
 ### Docker
 
@@ -193,7 +237,7 @@ subsequent `mysql` call needs the password. Omitting it gives:
 ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
 ```
 
-Set the `MYSQL` variable from the Conventions section accordingly.
+Add `-p<password>` to every client call, as in the Conventions section.
 
 To pass server flags, append `mysqld` and the flags after the image name:
 
@@ -212,26 +256,61 @@ extension — extensions need the SDK that the server build produces.
 
 ## Step 3 — Start the server
 
-For an installer or source install, use the exact command
-`credentials.txt` prints for this machine rather than composing one. It looks
-like this:
+For an installer or source install, use the command `credentials.txt` prints
+for this machine — adding `--user=root` if you are root — rather than
+composing one. It looks like this:
 
 ```bash
-mysqld --datadir=<data-dir> --socket=<socket> --port=<port> --daemonize
+<build-dir>/bin/mysqld --datadir=<data-dir> --socket=<socket> \
+  --port=<port> --daemonize
 ```
+
+`credentials.txt` distinguishes the two: `Installation:` is `~/.villagesql`,
+while the binaries live under `Build Dir:` — `~/.villagesql/prebuilt/bin`.
 
 Three things that reliably bite:
 
 - **Never write `--datadir=~/...`.** No shell expands `~` after `=`, so
   mysqld receives a literal `~` and aborts. Use `$HOME` or an absolute path.
 - **Running as root needs `--user=root`.** Containers and many CI images run
-  as root, and the command in `credentials.txt` does not include this flag.
-  Without it mysqld refuses to start: `[ERROR] [MY-010123] [Server] Fatal
+  as root, and the installer leaves this flag out of the command it writes
+  into `credentials.txt` (still true of 0.0.5, the current release). Without it mysqld refuses to start: `[ERROR] [MY-010123] [Server] Fatal
   error: Please read "Security" section of the manual to find out how to run
   mysqld as root!`
-- **`vsql_allow_preview_extensions` defaults to `OFF`** and must be set at
-  startup. It cannot be turned on later with `SET GLOBAL`. Some bundled
-  extensions (`vsql_rest`, for instance) will not install without it.
+- **`vsql_allow_preview_extensions` defaults to `OFF`.** Some bundled
+  extensions (`vsql_rest`, for instance) will not install without it, failing
+  with `ERROR 3219 (HY000): Failed to load VEF extension '<name>': extension
+  requires preview capabilities but vsql_allow_preview_extensions is OFF`.
+  Set it at startup, or afterwards with `SET PERSIST` — which takes effect
+  immediately, no restart needed. `SET GLOBAL` is rejected: `ERROR 3219
+  (HY000): vsql_allow_preview_extensions must be set with SET PERSIST, not
+  SET GLOBAL, to ensure the setting survives server restart`. On builds
+  before 2026-08-10 the `OFF` direction was accepted instead, silently
+  disabling preview extensions on the running server, so avoid `SET GLOBAL`
+  here whatever your version reports.
+
+**On an installer or source install, check the root password now.** An
+installer whose own temporary server failed to start writes the password it
+generated without ever applying it, leaving root reachable with an **empty**
+password while `credentials.txt` and the completion banner both say
+otherwise. This is most likely when installing as root, the normal case in
+containers and CI:
+
+```bash
+"$VSQL_CLIENT" -u root -p'<password from credentials.txt>' \
+  --socket="$VSQL_SOCKET" -e "SELECT 1;"
+```
+
+If that gives `ERROR 1045 (28000): Access denied for user 'root'@'localhost'
+(using password: YES)`, try again with no password at all. If *that* works,
+the database is unprotected — set the password yourself:
+
+```sql
+ALTER USER 'root'@'localhost' IDENTIFIED BY '<password from credentials.txt>';
+```
+
+Re-running the installer over the existing data directory also repairs this.
+Either way, every client call from here on needs `-p<password>`.
 
 A Docker container started with `-d` is already running, but is not ready
 immediately. Wait for readiness with a **bounded** loop — an unbounded
@@ -239,24 +318,36 @@ immediately. Wait for readiness with a **bounded** loop — an unbounded
 `timeout` does not exist on macOS. Note that `mysqladmin ping --silent`
 prints `mysqld is alive` on stdout, so redirect both streams:
 
+A ping alone is not enough. The image's entrypoint starts a **temporary
+server** during initialization — visible in the logs as `port: 0` — then
+stops it and starts the real one. `mysqladmin ping` answers for both, so a
+loop that breaks on the first success can return seconds before the durable
+server exists, and the next statement dies with `ERROR 2013 (HY000): Lost
+connection to MySQL server during query`. Require the log line for the real
+port as well, and keep a flag so an expiry is distinguishable from success:
+
 ```bash
+ready=0
 for i in $(seq 1 60); do
-  docker exec "$VSQL_CONTAINER" mysqladmin ping --silent >/dev/null 2>&1 && break
+  if docker exec "$VSQL_CONTAINER" mysqladmin ping --silent >/dev/null 2>&1 \
+     && docker logs "$VSQL_CONTAINER" 2>&1 | grep -q 'ready for connections.*port: 3306'; then
+    ready=1; break
+  fi
   sleep 2
 done
 ```
 
-If that loop expires, read the logs rather than retrying blindly:
+If it expired, read the logs rather than retrying blindly:
 
 ```bash
-docker logs "$VSQL_CONTAINER" | tail -30
+[ "$ready" = 1 ] || docker logs "$VSQL_CONTAINER" | tail -30
 ```
 
 ## Step 4 — Connect and confirm the build
 
 ```bash
-$MYSQL --socket="$VSQL_SOCKET" -e "SELECT VERSION();"          # host
-docker exec "$VSQL_CONTAINER" $MYSQL -e "SELECT VERSION();"    # Docker
+"$VSQL_CLIENT" -u root --socket="$VSQL_SOCKET" -e "SELECT VERSION();"   # host
+docker exec "$VSQL_CONTAINER" mysql -u root -e "SELECT VERSION();"     # Docker
 ```
 
 Report the version string back to the user. This is the one fact that
@@ -274,6 +365,9 @@ list or the directory — ask the server where it looks, then list it:
 ```sql
 SHOW VARIABLES LIKE 'veb_dir';
 ```
+
+Listing it is a shell command, not SQL — `ls <veb_dir>` on a host install, or
+`docker exec "$VSQL_CONTAINER" ls <veb_dir>` for a container.
 
 It is `/usr/lib/veb/` in the Docker image and
 `<build-or-install-dir>/lib/veb/` for a source or installer build.
@@ -394,6 +488,11 @@ docker run -d --name "$VSQL_CONTAINER" -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
   -v /path/to/my-extension:/src:ro villagesql/server:stable
 ```
 
+The new container starts with an empty data directory, so the extension you
+installed in Step 5 is gone with the old one — redo that step here. If you
+know in advance that you will build an extension, add the `-v` mount in
+Step 2 and skip this replacement entirely.
+
 Wait for readiness again with the bounded loop from Step 3, then build:
 
 ```bash
@@ -424,7 +523,8 @@ docker exec "$VSQL_CONTAINER" mysqltest -u root \
   --result-file=/work/mysql-test/r/<name>.result
 ```
 
-If the test file begins with `INSTALL EXTENSION`, uninstall first — the
+If the test file begins with `INSTALL EXTENSION`, run
+`UNINSTALL EXTENSION <name>;` first — the
 orchestrator normally provides the clean state that the file assumes, and
 without it the test fails with `already installed`.
 
@@ -466,7 +566,9 @@ which exists for exactly this question.
 | mysqld aborts complaining about the data directory | `--datadir=~/...` passed a literal `~`. Use `$HOME` or an absolute path. |
 | Connects, but version has no `villagesql` | You reached a stock MySQL. Re-check the socket from `ps`. |
 | `No such container: vsql` | The container name in this skill is a placeholder. Set `VSQL_CONTAINER` and use it everywhere. |
-| `ERROR 1045 (28000): Access denied ... (using password: NO)` | The container was started with a root password but the client call omits it. Add it to `$MYSQL`. |
+| `ERROR 1045 (28000): Access denied ... (using password: NO)` | The container was started with a root password but the client call omits it. Add `-p<password>`. |
+| `ERROR 1045 (28000): Access denied ... (using password: YES)` using the password from `credentials.txt` | The installer never applied it. Connect with no password; if that works, set the password yourself or re-run the installer. |
+| `mysql: command not found` after an installer install | The client is not on `PATH`. Use the full path from `credentials.txt` — see `VSQL_CLIENT` in Conventions. |
 | Readiness loop never returns | Container died during init. `docker logs <name> \| tail -30`. |
 | `ERROR 1064` on `INSTALL EXTENSION` | The extension name was quoted. It is a bare identifier. |
 | `ERROR 3219 (HY000): VEB file not found: <name>.veb` | The `.veb` is not in `veb_dir`. List that directory and check the spelling. |
