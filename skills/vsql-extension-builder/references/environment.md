@@ -63,6 +63,13 @@ error or unexpected behaviour.
 **`--echo` is a directive, not a comment prefix.** It prints its
 argument to the test output and appears in the `.result` file.
 
+**A failing VDF surfaces error 3200 (`ER_UDF_ERROR`).** Both forms work
+in a test file: `--error ER_UDF_ERROR` (preferred) or `--error 3200`.
+
+**MySQL reserved words cannot be bare column aliases.** `SELECT 1 AS
+generated` is a syntax error in a `.test` file just as in the client —
+backtick-quote the alias or pick a different word.
+
 ## Common mysqltest directives
 
 ```
@@ -139,9 +146,16 @@ CREATE TABLE t (col vsql_tvector.tvector('dimension=128'));  -- key=value string
 
 Extension name must be the install name (e.g., `vsql_hstore`).
 
-`CAST(... AS <custom_type>)` is **not** supported — custom types aren't
-wired into MySQL's CAST grammar. To get a value of a custom type, insert
-into a column of that type or call the type's constructor VDF directly.
+CAST is unsupported in **both** directions — custom types aren't wired
+into MySQL's CAST grammar. `CAST(... AS <custom_type>)` fails, and so
+does `CAST(<custom_column> AS CHAR)` (`ERROR 1221: Incorrect usage of
+cast_as_char and <type>`). Other charset-aware string functions
+(`CONVERT`, `CHARSET`, `JSON_QUOTE`) fail the same way on custom-type
+values. To get a value of a custom type, insert into a column of that
+type or call the type's constructor VDF directly; to render one as
+text, `SELECT` the column or the constructor result directly — decode
+runs automatically. Write acceptance criteria and tests with plain
+`SELECT`, not `CAST(... AS CHAR)`.
 
 ## Useful commands
 
