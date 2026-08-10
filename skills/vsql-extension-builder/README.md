@@ -29,9 +29,9 @@ the same machine:
   `villagesql/server` image ships the extension SDK, its CMake package, a
   C++ toolchain, and a `vsql-build-extension.sh` helper, so the skill's
   build and manual-verification phases work inside a container. The image
-  does not ship the MTR test runner, so the skill's test phase cannot run
-  there. For the full workflow, use an installer or source build on the
-  host.
+  ships `mysqltest` but not `mysql-test-run.pl`, so a single test file can be
+  run by hand while the skill's `--suite=` test phase cannot. For the full
+  workflow, use an installer or source build on the host.
 
 - **For Rust extensions:** `cargo` 1.87+ and `cargo-vsql`. The skill
   verifies both before starting.

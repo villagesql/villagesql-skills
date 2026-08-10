@@ -23,10 +23,10 @@ curl -fsSL https://install.villagesql.com | bash
 
 The `villagesql/server` Docker image carries the extension SDK, a C++
 toolchain, and a `vsql-build-extension.sh` helper, so you can build and
-install an extension inside a container. What it does not carry is the MTR
-test runner, so `vsql-extension-builder` cannot complete its test phase
-there — that phase needs an installer or source build on the host. See each
-skill's README for its full requirements.
+install an extension inside a container. What it does not carry is
+`mysql-test-run.pl`, the MTR orchestrator, so `vsql-extension-builder` cannot
+complete its test phase there — that phase needs an installer or source build
+on the host. See each skill's README for its full requirements.
 
 ## Installing
 

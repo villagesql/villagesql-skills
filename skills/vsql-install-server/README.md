@@ -25,18 +25,26 @@ a running Docker daemon.
 
 ## Install paths, and what each one gives you
 
-| Path | Server | Extension SDK | MTR test runner |
-|---|---|---|---|
-| Installer (`install.villagesql.com`) | yes | yes | yes |
-| Docker (`villagesql/server`) | yes | yes | **no** |
-| Source build | yes | yes | yes |
+| Path | Server | Extension SDK | `mysqltest` | `mysql-test-run.pl` |
+|---|---|---|---|---|
+| Installer (`install.villagesql.com`) | yes | yes | yes | yes |
+| Docker (`villagesql/server`) | yes | yes | yes | **no** |
+| Source build | yes | yes | yes | yes |
 
 The Docker image ships the SDK headers, its CMake package, a C++ toolchain,
 and a `vsql-build-extension.sh` helper, so building and installing an
 extension inside the container works. It is built with
-`-DINSTALL_MYSQLTESTDIR=""` and excludes the test suites, so there is no
-`mysql-test-run.pl`. Extension test suites need the installer or a source
-build.
+`-DINSTALL_MYSQLTESTDIR=""` and excludes the test suites, so the
+`mysql-test-run.pl` orchestrator is absent — but `mysqltest` itself is
+present, so a single `.test`/`.result` pair can be run by hand against the
+running server. A normal `--suite=` run, anything using
+`$MYSQLTEST_VARDIR`, and the `vsql-extension-builder` test phase need the
+installer or a source build.
+
+The installer has two traps worth knowing before you start: its published
+one-liner is interactive and aborts under any agent or CI shell unless you set
+`INSTALL_METHOD`, and it can print a success banner over a failed database
+initialization. The skill handles both.
 
 ## Extensions, plugins, and components
 
