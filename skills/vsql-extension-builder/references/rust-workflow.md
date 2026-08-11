@@ -80,7 +80,17 @@ silently drops the capability — the user must confirm the reduced scope.
 
 ### Scaffold (replaces Phase 2 step 1)
 
-No template repo exists for Rust extensions. Scaffold manually:
+A cargo-generate template exists:
+[vsql-extension-template-rust](https://github.com/villagesql/vsql-extension-template-rust).
+Prefer it — it generates `Cargo.toml`, `manifest.json`, a working
+passthrough function, and an MTR test skeleton from prompts:
+
+```bash
+cargo install cargo-generate   # needs 0.18+
+cargo generate gh:villagesql/vsql-extension-template-rust --name vsql_<name>
+```
+
+If cargo-generate is unavailable, scaffold manually:
 
 ```bash
 cargo new --lib vsql-<name>
