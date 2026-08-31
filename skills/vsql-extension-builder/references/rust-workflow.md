@@ -71,6 +71,7 @@ to run with `vsql_allow_preview_extensions=ON`.
 **Not yet available in the Rust SDK** (confirm against the crate source
 before treating as current):
 - Variable-length column storage (Column Storage ABI)
+- Custom indexes (`index_type` and `index_profile`)
 
 If the user's request requires any unavailable capability, present the
 gap explicitly before Phase 2. Do not proceed with a workaround that

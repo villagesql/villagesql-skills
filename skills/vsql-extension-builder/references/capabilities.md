@@ -102,4 +102,3 @@ the first time, and record results in `.claude/tracking/limitations.md`.
      if users will consume the output as JSON. Fixed in VillageSQL 0.0.7 —
      check `SELECT VERSION()` against the target server rather than
      assuming either behavior.
-     if users will consume the output as JSON.
