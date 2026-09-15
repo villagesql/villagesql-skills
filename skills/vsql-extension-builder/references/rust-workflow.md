@@ -54,8 +54,14 @@ These define what the Rust SDK can express today.
 
 **Known behaviors that constrain design** (see
 `references/capabilities.md` → "STRING return size and charset"):
-- STRING returns are capped at 256 bytes. Designing a 0-arg "return all
-  rows as JSON" function will hit this — chunk or prefix-filter instead.
+- STRING return size is bounded by the `buffer_size:` key declared in
+  `func!`, not by a fixed server-wide constant — a result larger than the
+  declared buffer errors rather than silently truncating
+  (`villagesql/src/lib.rs`: "Too large for the result buffer. Errors rather
+  than truncates. The function should declare a larger buffer_size in
+  func!"). Size `buffer_size:` to the largest result the function can
+  produce; verify against the running server rather than assuming a cap,
+  the same as the C SDK's `.buffer_size()` (see `references/capabilities.md`).
 - On VillageSQL 0.0.6 and earlier, STRING results carry the `binary`
   charset; callers consuming results via MySQL JSON functions need
   `CONVERT(... USING utf8mb4)` there. Fixed in VillageSQL 0.0.7 — check
