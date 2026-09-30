@@ -48,6 +48,21 @@ CLAUDE_SKILLS_DIR=~/.claude/skills \
   curl -sSL https://villagesql.com/skills | bash
 ```
 
+### Claude Code plugin
+
+From the official Claude Code plugin marketplace:
+
+```
+/plugin install vsql-extension-builder@claude-plugins-official
+```
+
+Or add this repo as a marketplace:
+
+```
+/plugin marketplace add villagesql/villagesql-skills
+/plugin install villagesql@villagesql
+```
+
 ### Manual install (recommended for contributors)
 
 #### Claude Code

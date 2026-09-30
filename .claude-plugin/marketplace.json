@@ -1,0 +1,18 @@
+{
+  "name": "villagesql",
+  "owner": {
+    "name": "VillageSQL",
+    "url": "https://github.com/villagesql"
+  },
+  "description": "Agent skills for VillageSQL, the drop-in MySQL replacement with extensions.",
+  "plugins": [
+    {
+      "name": "villagesql",
+      "source": "./",
+      "description": "Skills for VillageSQL (MySQL with extensions): build extensions end-to-end (including porting PostgreSQL extensions to MySQL) and install VillageSQL Server.",
+      "homepage": "https://villagesql.com",
+      "repository": "https://github.com/villagesql/villagesql-skills",
+      "license": "Apache-2.0"
+    }
+  ]
+}

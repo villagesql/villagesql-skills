@@ -1,12 +1,13 @@
 ---
 name: vsql-extension-builder
 description: >
-  Build a VillageSQL extension end-to-end using the 7-phase persona-driven
-  workflow: requirements, feasibility, scaffold, implementation, CTO review,
-  UAT, and documentation. Supports C++ (default) and Rust implementations.
-  Discovers the current VEF API from live SDK sources during Phase 1
-  feasibility and Phase 2 bootstrap — no hardcoded API names. Works from
-  any directory.
+  Build a VillageSQL extension — custom SQL functions or custom types — in
+  C++ or Rust, including a port of an existing PostgreSQL extension. Use
+  when the user wants to create, scaffold, test, or port a VillageSQL (VEF)
+  extension. Runs a 7-phase workflow: requirements, feasibility, scaffold,
+  implementation, review, acceptance testing, and documentation, reading the
+  current VEF API from the installed SDK headers.
+argument-hint: "[what the extension should do]"
 ---
 
 # VillageSQL Extension Builder
@@ -133,6 +134,11 @@ Gather through plain-text conversational questions (no UI selectors):
    If a socket path and credentials are available, attempt connection
    immediately. Only ask the user if the connection attempt fails or no
    credentials can be found in any of the above files.
+
+   If no VillageSQL server is installed or running, run the
+   `vsql-install-server` skill, then continue from this step. If that skill
+   is not installed, give the user the install command
+   `curl -fsSL https://install.villagesql.com | bash` and stop.
 
    Once connected, run:
    ```sql
