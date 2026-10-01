@@ -7,6 +7,7 @@ description: >
   covers reconnecting to a server that is already running. Use before
   vsql-extension-builder, or any time a VillageSQL server is needed and
   none is confirmed working.
+argument-hint: "[installer|docker|source]"
 ---
 
 # VillageSQL Server Install and Verify
