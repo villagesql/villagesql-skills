@@ -87,16 +87,16 @@ Gather through plain-text conversational questions (no UI selectors):
    `references/rust-workflow.md` for Rust-specific steps in Phases 1–3
    and 6; all other phases and gates apply unchanged.
 
-   **If Rust — pre-flight check:** Before proceeding, verify:
+   **If Rust — pre-flight check:** Before proceeding, run:
    ```bash
-   cargo --version        # must be 1.87 or higher
-   cargo vsql --help      # confirms cargo-vsql is installed
+   cargo --version                  # must be 1.87 or higher
+   cargo install --force cargo-vsql # install or replace with the current release
    ```
+   Always reinstall: `cargo-vsql` has no `--version`, so an old copy
+   cannot be detected.
    If `cargo` is missing: "Install Rust via https://rustup.rs (stable
    toolchain, 1.87+), then re-run."
-   If `cargo vsql` is missing: "Run `cargo install cargo-vsql`, then
-   re-run."
-   Do not continue until both checks pass.
+   Do not continue until both commands succeed.
 
    **PostgreSQL port detection.** If the description references an
    existing PostgreSQL extension (e.g. "port pgcrypto", "like hstore",
@@ -359,8 +359,8 @@ server-side tracking issues happens in Phase 6.
      ships.
    - Update `README.md` placeholder content (the template has a stub —
      replace it now with at least the extension name, one-line
-     description, and install command; full README assembly happens in
-     Phase 6)
+     description, install command, and an empty "Known Limitations"
+     heading; full README assembly happens in Phase 6)
    - Update `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` so they describe this
      extension, not the template. These onboard future agents and must
      not ship as template boilerplate.
@@ -603,7 +603,12 @@ Phase 6. The extension is not done until the Phase 6 gate passes.
 
    a. **Keyword search.** Run two queries against villagesql-server using
       `mcp__github__search_issues` — one using `search_terms.technical`,
-      one using `search_terms.user_facing`. Log both query strings.
+      one using `search_terms.user_facing`. Log both query strings. If
+      `language: rust` and the gap is in the crate or `cargo vsql`, search
+      `villagesql/vsql-rust-sdk` instead; a draft for that gap goes there.
+
+      If the GitHub MCP tools are unavailable, use `gh search issues`,
+      `gh issue view`, and `gh issue list` instead.
 
    b. **Inspect every hit.** For each result returned, call
       `mcp__github__issue_read` to read the full issue body. A match
@@ -805,13 +810,21 @@ could be clearer, tighter, or better specified.
 **If no friction points**: skip silently. Do not present the note or
 offer to file anything.
 
+**Before you present the note, sort each friction point by its cause.**
+Only a problem with this skill's own instructions belongs in the note. A
+defect in a tool goes to that tool's repository as a separate draft issue,
+in the Phase 6 Call to Action format:
+
+- `cargo vsql` or the `villagesql` crate → `villagesql/vsql-rust-sdk`
+- the server, or the C++ SDK → `villagesql/villagesql-server`
+
 **If friction points exist**: present the note inline (do not print
 tracking file contents — synthesize from them), then ask: "Want me to
 file this as an issue on villagesql-skills so it can improve future
 runs?" If yes, file to `villagesql/villagesql-skills` with title
 `[skill-feedback] <extension-name>: <one-line summary>` and the
-structured note as the body. If the MCP call fails (permissions),
-offer the note as copy-paste text instead.
+structured note as the body. If the MCP call fails (permissions), use
+`gh issue create`; if that fails too, offer the note as copy-paste text.
 
 ---
 
