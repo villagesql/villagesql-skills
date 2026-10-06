@@ -26,6 +26,6 @@ working directory) may contain machine-specific overrides.
 - Commit messages: summary line ≤50 characters, imperative mood, no period;
   body lines ≤72 characters explaining WHY, not WHAT; end agent-authored
   commits and PR descriptions with the line
-  `This PR was written with the assistance of AI (<tool>).`, e.g. `(Claude)`;
+  `This PR was written with the assistance of generative AI`;
   no `Co-Authored-By:` line
 - Use `git -C /path <subcommand>` — never `cd /path && git`
