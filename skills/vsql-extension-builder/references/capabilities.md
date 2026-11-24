@@ -88,9 +88,10 @@ the first time, and record results in `.claude/tracking/limitations.md`.
   the `CAST(col AS DOUBLE)` or `col * 1.0` workaround, record the
   limitation, and name the server version that fixes it.
 
-- **STRING return size and charset.** Two behaviors affect any function
-  returning text. Both change across server versions — probe the running
-  server rather than trusting this file:
+- **STRING return size and charset.** Three behaviors affect any function
+  returning text; the third also affects BINARY returns. All three change
+  across server versions — probe the running server rather than trusting
+  this file:
   1. **Size is bounded by the declared buffer size.** STRING returns are
      capped at the `.buffer_size()` the function declares at
      registration, not at a server-wide constant. (Older servers
@@ -118,7 +119,9 @@ the first time, and record results in `.claude/tracking/limitations.md`.
      time it is materialized, even though a bare `SELECT` of the same call
      looked fine. Grep the SDK header for `max_result_length` on
      `FuncBuilder`/`AggFuncBuilder` (`vsql/func_builder.h`); where present,
-     declare it (after `.returns(...)`) sized to the function's true
-     maximum output, for every STRING- or BINARY-returning function. Test
+     declare it (after `.returns(...)`) on each STRING- or BINARY-returning
+     function whose output can exceed its arguments' width, sized to the
+     true maximum output in characters for STRING or bytes for BINARY; the
+     declaration needs protocol 5, so VillageSQL 0.0.8 or newer. Test
      the fix with `CREATE TABLE t AS SELECT func(...)` specifically — a
      bare `SELECT` does not exercise this path and passes either way.
