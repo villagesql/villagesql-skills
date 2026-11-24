@@ -107,3 +107,18 @@ the first time, and record results in `.claude/tracking/limitations.md`.
      if users will consume the output as JSON. Fixed in VillageSQL 0.0.7 —
      check `SELECT VERSION()` against the target server rather than
      assuming either behavior.
+  3. **A materialized column is sized from the argument, not the output,
+     unless told otherwise.** `CREATE TABLE t AS SELECT func(args...)`, a
+     derived table, or any other materialization (a live `SELECT` is
+     unaffected) infers the result column's width from the widest
+     *argument*, not from what the function can actually return. A
+     function whose output can exceed its arguments' width — fixed
+     overhead, no arguments at all, or real expansion in the algorithm —
+     then fails with `ERROR 1406 (Data too long for column ...)` the first
+     time it is materialized, even though a bare `SELECT` of the same call
+     looked fine. Grep the SDK header for `max_result_length` on
+     `FuncBuilder`/`AggFuncBuilder` (`vsql/func_builder.h`); where present,
+     declare it (after `.returns(...)`) sized to the function's true
+     maximum output, for every STRING- or BINARY-returning function. Test
+     the fix with `CREATE TABLE t AS SELECT func(...)` specifically — a
+     bare `SELECT` does not exercise this path and passes either way.
